@@ -190,17 +190,17 @@ func (c *Context) Ip() string {
 
 // AcceptsHTML Checks if request accepts html response
 func (c *Context) AcceptsHTML() bool {
-	return acceptsHTMLRegex.MatchString(c.Get(interface{}("Accept")))
+	return acceptsHTMLRegex.MatchString(c.Get("Accept"))
 }
 
 // AcceptsXML Checks if request accepts xml response
 func (c *Context) AcceptsXML() bool {
-	return acceptsXMLRegex.MatchString(c.Get(interface{}("Accept")))
+	return acceptsXMLRegex.MatchString(c.Get("Accept"))
 }
 
 // AcceptsJSON Checks if request accepts json response
 func (c *Context) AcceptsJSON() bool {
-	return acceptsJSONRegex.MatchString(c.Get(interface{}("Accept")))
+	return acceptsJSONRegex.MatchString(c.Get("Accept"))
 }
 
 //ResponseWriter relate method
