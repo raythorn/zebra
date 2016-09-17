@@ -1,9 +1,9 @@
 package falcon
 
 import (
+	"github.com/raythorn/falcon/router"
 	"log"
 	"net/http"
-	"raythorn/falcon/router"
 )
 
 var (
