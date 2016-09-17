@@ -47,7 +47,7 @@ func (c *Context) Reset(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get data from context
-func (c *Context) Get(key interface{}) interface{} {
+func (c *Context) Get(key string) string {
 	if v, ok := c.data[key]; ok {
 		return v
 	}
@@ -56,9 +56,9 @@ func (c *Context) Get(key interface{}) interface{} {
 }
 
 // Set data to context
-func (c *Context) Set(key, value interface{}) {
+func (c *Context) Set(key, value string) {
 	if c.data == nil {
-		c.data = make(map[interface{}]interface{})
+		c.data = make(map[string]string)
 	}
 
 	c.data[key] = value
