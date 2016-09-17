@@ -1,8 +1,22 @@
+// Copyright 2016 Derek Ray. All rights reserved.
+// Use of this source code is governed by Apache License 2.0
+// that can be found in the LICENSE file.
+
+// Package context implement a http request and response context.
+//
+// context will parse http request header and form, and save them, you can retrieve these
+// data with Get, ctx.Get("Accept"), for example, to get the accept format for client. The
+// context will also parse the named regexp in request URL, and the name MUST NOT the same
+// as the key of header or form, otherwise, they will be overrided.
 package context
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
+	"encoding/xml"
 	"errors"
+	"html/template"
 	"net"
 	"net/http"
 	"regexp"
@@ -205,14 +219,17 @@ func (c *Context) AcceptsJSON() bool {
 
 //ResponseWriter relate method
 
+// Set response header with a pair of key-value
 func (c *Context) Header(key, value string) {
 	c.rw.Header().Set(key, value)
 }
 
+// Set response header with a http code
 func (c *Context) WriteHeader(code int) {
 	c.rw.WriteHeader(code)
 }
 
+// Hijack the http request, and control this connection by yourself
 func (c *Context) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	hijack, ok := c.rw.(http.Hijacker)
 	if !ok {
@@ -222,12 +239,14 @@ func (c *Context) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return hijack.Hijack()
 }
 
+// Write all the data in cache to http.ResponseWriter
 func (c *Context) Flush() {
 	if f, ok := c.rw.(http.Flusher); ok {
 		f.Flush()
 	}
 }
 
+// CloseNotity notify if connection closed
 func (c *Context) CloseNotify() <-chan bool {
 	if cn, ok := c.rw.(http.CloseNotifier); ok {
 		return cn.CloseNotify()
@@ -236,24 +255,60 @@ func (c *Context) CloseNotify() <-chan bool {
 	return nil
 }
 
+// WriteString write a string data to client
 func (c *Context) WriteString(data string) error {
 	_, err := c.rw.Write([]byte(data))
 
 	return err
 }
 
+// Write bytes to client
 func (c *Context) Write(bytes []byte) (int, error) {
 	return c.rw.Write(bytes)
 }
 
-func (c *Context) ServeJSON() {
+// JSON write json-like data to client
+func (c *Context) JSON(data interface{}, indent bool) error {
 
+	var err error
+	var content []byte
+
+	c.Header("Content-Type", "application/json; charset=utf-8")
+	if indent {
+		content, err = json.MarshalIndent(data, "", "  ")
+	} else {
+		content, err = json.Marshal(data)
+	}
+
+	if err != nil {
+		http.Error(c.rw, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+
+	c.Write(content)
+
+	return nil
 }
 
-func (c *Context) ServeXML() {
+// XML write xml-like data to client
+func (c *Context) XML(data interface{}, indent bool) {
 
-}
+	var err error
+	var content []byte
 
-func (c *Context) ServeJSONP() {
+	c.Header("Content-Type", "application/xml; charset=utf-8")
+	if indent {
+		content, err = xml.MarshalIndent(data, "", "  ")
+	} else {
+		content, err = xml.Marshal(data)
+	}
 
+	if err != nil {
+		http.Error(c.rw, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+
+	c.Write(content)
+
+	return nil
 }

@@ -1,6 +1,12 @@
+// Copyright 2016 Derek Ray. All rights reserved.
+// Use of this source code is governed by Apache License 2.0
+// that can be found in the LICENSE file.
+
+// Package falcon is a simple wrap implement for develop http server.
 package falcon
 
 import (
+	"fmt"
 	"github.com/raythorn/falcon/router"
 	"log"
 	"net/http"
@@ -8,10 +14,12 @@ import (
 
 var (
 	falcon *Falcon
+	Env    *Environment
 )
 
 func init() {
 	falcon = New()
+	Env = &Environment{data: make(map[string]string)}
 }
 
 type Falcon struct {
@@ -31,6 +39,16 @@ func (f *Falcon) run() {
 	log.Println("Server listen at 192.168.1.107:8080")
 
 	http.ListenAndServe("192.168.1.107:8080", f)
+	if Env.TLS() {
+		go func() {
+			cert := Env.TLSCert()
+			key := Env.TLSKey()
+			port := Env.TLSPort()
+
+			addr := fmt.Sprintf(":%d", port)
+			http.ListenAndServeTLS(addr, cert, key, f)
+		}()
+	}
 
 }
 
