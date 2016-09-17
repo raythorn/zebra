@@ -19,7 +19,7 @@ var (
 type Context struct {
 	rw      http.ResponseWriter
 	request *http.Request
-	data    map[interface{}]interface{}
+	data    map[string]string
 }
 
 // Return a new Context instance
