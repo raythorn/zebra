@@ -19,12 +19,12 @@ var (
 type Context struct {
 	rw      http.ResponseWriter
 	request *http.Request
-	data    map[string]string
+	data    map[string]interface{}
 }
 
 // Return a new Context instance
 func New() *Context {
-	return &Context{data: make(map[string]string)}
+	return &Context{data: make(map[string]interface{})}
 }
 
 // Initialise Context with HTTP Request and ResponseWriter, it will parse the Request header,
@@ -47,7 +47,7 @@ func (c *Context) Reset(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get data from context
-func (c *Context) Get(key string) string {
+func (c *Context) Get(key string) interface{} {
 	if v, ok := c.data[key]; ok {
 		return v
 	}
@@ -56,9 +56,9 @@ func (c *Context) Get(key string) string {
 }
 
 // Set data to context
-func (c *Context) Set(key, value string) {
+func (c *Context) Set(key string, value interface{}) {
 	if c.data == nil {
-		c.data = make(map[string]string)
+		c.data = make(map[string]interface{})
 	}
 
 	c.data[key] = value
@@ -190,17 +190,17 @@ func (c *Context) Ip() string {
 
 // AcceptsHTML Checks if request accepts html response
 func (c *Context) AcceptsHTML() bool {
-	return acceptsHTMLRegex.MatchString(c.Get("Accept"))
+	return acceptsHTMLRegex.MatchString(c.Get(interface{}("Accept")))
 }
 
 // AcceptsXML Checks if request accepts xml response
 func (c *Context) AcceptsXML() bool {
-	return acceptsXMLRegex.MatchString(c.Get("Accept"))
+	return acceptsXMLRegex.MatchString(c.Get(interface{}("Accept")))
 }
 
 // AcceptsJSON Checks if request accepts json response
 func (c *Context) AcceptsJSON() bool {
-	return acceptsJSONRegex.MatchString(c.Get("Accept"))
+	return acceptsJSONRegex.MatchString(c.Get(interface{}("Accept")))
 }
 
 //ResponseWriter relate method
