@@ -19,12 +19,12 @@ var (
 type Context struct {
 	rw      http.ResponseWriter
 	request *http.Request
-	data    map[string]interface{}
+	data    map[string]string
 }
 
 // Return a new Context instance
 func New() *Context {
-	return &Context{data: make(map[string]interface{})}
+	return &Context{data: make(map[string]string)}
 }
 
 // Initialise Context with HTTP Request and ResponseWriter, it will parse the Request header,
@@ -36,7 +36,7 @@ func (c *Context) Reset(w http.ResponseWriter, r *http.Request) {
 
 	// Parse Request Header
 	for k, v := range c.request.Header {
-		c.Set(k, v)
+		c.Set(k, strings.Join(v, ","))
 	}
 
 	// Parse Request Form
@@ -47,18 +47,18 @@ func (c *Context) Reset(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get data from context
-func (c *Context) Get(key string) interface{} {
+func (c *Context) Get(key string) string {
 	if v, ok := c.data[key]; ok {
 		return v
 	}
 
-	return nil
+	return ""
 }
 
 // Set data to context
-func (c *Context) Set(key string, value interface{}) {
+func (c *Context) Set(key, value string) {
 	if c.data == nil {
-		c.data = make(map[string]interface{})
+		c.data = make(map[string]string)
 	}
 
 	c.data[key] = value
