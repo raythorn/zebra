@@ -24,7 +24,7 @@ type Context struct {
 
 // Return a new Context instance
 func New() *Context {
-	return &Context{data: make(map[interface{}]interface{})}
+	return &Context{data: make(map[string]string)}
 }
 
 // Initialise Context with HTTP Request and ResponseWriter, it will parse the Request header,
