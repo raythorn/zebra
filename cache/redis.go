@@ -4,7 +4,6 @@ import (
 	"errors"
 	redigo "github.com/garyburd/redigo/redis"
 	"log"
-	"sync"
 	"time"
 )
 
@@ -15,10 +14,8 @@ import (
 //for strings and hash, if you want use other data structure or complex operations, please
 //refer to Ioctrl, this function is just a wrap of redis.Do()
 type Redis struct {
-	pool  *redigo.Pool
-	uri   string
-	types map[string]string
-	lock  sync.RWMutex
+	pool *redigo.Pool
+	uri  string
 }
 
 //Make create a Redis instance, and return Cache
@@ -44,8 +41,7 @@ func (r *Redis) Make(uri string) Cache {
 				return err
 			},
 		},
-		uri:   uri,
-		types: make(map[string]string),
+		uri: uri,
 	}
 }
 
@@ -56,19 +52,19 @@ func (r *Redis) Destroy() error {
 
 //Factory returns interface Factory
 func (r *Redis) Factory() Factory {
-	return nil
+	return r
 }
 
 //Set data to redis with key and args.
 //
 //Set will auto parse args to determin which data structure to use. you cannot use "ex", "px", "nx", "xx" as keys, they are reserved for engine using.
 //	For strings
-//		Set("key", 345, "value") 				--> SETEX key 345 value
-//		Set("key", "value", "nx|xx")				--> SET key value nx|xx
-//		Set("key", "value", "ex|px" 345)			--> SET key value ex|px 345
+//		Set("key", 345, "value")                         --> SETEX key 345 value
+//		Set("key", "value", "nx|xx")                     --> SET key value nx|xx
+//		Set("key", "value", "ex|px" 345)                 --> SET key value ex|px 345
 //	For hash
-//		Set("key", "field", "value")				--> HSET key field value
-//		Set("key", "field", "valude"[,"filed", "value"])	--> HMSET key field value
+//		Set("key", "field", "value")                     --> HSET key field value
+//		Set("key", "field", "valude"[,"filed", "value"]) --> HMSET key field value
 //
 //Note: You cannot set a value to different data structure
 func (r *Redis) Set(key string, args ...interface{}) error {
@@ -109,48 +105,10 @@ func (r *Redis) Set(key string, args ...interface{}) error {
 	}
 
 	if cmd != "" {
-		var typ string = ""
-		r.lock.RLock()
-		if val, ok := r.types[key]; ok {
-			typ = val
-		}
-		r.lock.RUnlock()
+		args1 := []interface{}{key, args}
 
-		bHash := cmd[0] == 'h'
-
-		if typ != "" {
-			if (bHash && typ != "hash") || (!bHash && typ != "strings") {
-				var exists bool
-				if exists, err = redigo.Bool(conn.Do("exists", key)); err == nil {
-					if !exists {
-						typ = ""
-					} else {
-						err = errors.New("Redis: key exist")
-					}
-				}
-			}
-		}
-
-		if err == nil {
-			args1 := []interface{}{key}
-			for _, arg := range args {
-				args1 = append(args1, arg)
-			}
-
-			log.Println(args1)
-			_, err = conn.Do(cmd, args1...)
-
-			if bHash {
-				typ = "hash"
-			} else {
-				typ = "strings"
-			}
-
-			r.lock.Lock()
-			r.types[key] = typ
-			r.lock.Unlock()
-
-		}
+		log.Println(args1)
+		_, err = conn.Do(cmd, args1...)
 
 	} else {
 		err = errors.New("Redis: invalid args")
@@ -163,10 +121,9 @@ func (r *Redis) Set(key string, args ...interface{}) error {
 //
 //Get will auto parse args to determin which data structure to use.
 //	For strings
-//		Get("key")			--> GET	key	(key is key of strings structure)
+//		Get("key")                    --> GET	key	(key is key of strings structure)
 //	For hash
-//		Get("key")			--> HGETALL key	(key is key of hash structure)
-//		Get("key", "field"[,"field"])	--> HMGET key filed [field]
+//		Get("key", "field"[,"field"]) --> HMGET key filed [field]
 func (r *Redis) Get(key string, args ...string) interface{} {
 
 	conn := r.pool.Get()
@@ -176,23 +133,10 @@ func (r *Redis) Get(key string, args ...string) interface{} {
 	}
 	defer conn.Close()
 
-	var cmd string = ""
-	var typ string = ""
+	var cmd string = "GET"
 	size := len(args)
 
-	if size == 0 {
-		r.lock.RLock()
-		if val, ok := r.types[key]; ok {
-			typ = val
-		}
-		r.lock.RUnlock()
-
-		if typ == "strings" {
-			cmd = "GET"
-		} else if typ == "hash" {
-			cmd = "HGETALL"
-		}
-	} else {
+	if size > 0 {
 		cmd = "HMGET"
 	}
 
@@ -208,9 +152,9 @@ func (r *Redis) Get(key string, args ...string) interface{} {
 
 //Incr increase key's value
 //
-//	Incr("key")			--> INCR key
-//	Incr("key", 10)			--> INCRBY key 10
-//	Incr("key", "field", 10)	--> HINCRBY key field 10
+//	Incr("key")              --> INCR key
+//	Incr("key", 10)          --> INCRBY key 10
+//	Incr("key", "field", 10) --> HINCRBY key field 10
 func (r *Redis) Incr(key string, args ...interface{}) error {
 	conn := r.pool.Get()
 	if nil == conn {
@@ -243,9 +187,9 @@ func (r *Redis) Incr(key string, args ...interface{}) error {
 
 //Decr decrease key's value
 //
-//	Decr("key")			--> DECR key
-//	Decr("key", 10)			--> DECRBY key 10
-//	Decr("key", "field", 10)	--> HDECRBY key field 10
+//	Decr("key")              --> DECR key
+//	Decr("key", 10)	         --> DECRBY key 10
+//	Decr("key", "field", 10) --> HDECRBY key field 10
 func (r *Redis) Decr(key string, args ...interface{}) error {
 	conn := r.pool.Get()
 	if nil == conn {
@@ -278,8 +222,8 @@ func (r *Redis) Decr(key string, args ...interface{}) error {
 
 //Exist check if key or field existed
 //
-//	Exist("key")				--> EXISTS key
-//	Exist("key", "field"[, "field"])	--> EXISTS key field [field]
+//	Exist("key")                     --> EXISTS key
+//	Exist("key", "field"[, "field"]) --> EXISTS key field [field]
 func (r *Redis) Exist(key string, args ...interface{}) bool {
 
 	conn := r.pool.Get()
@@ -311,8 +255,8 @@ func (r *Redis) Exist(key string, args ...interface{}) bool {
 
 //Delete delete a key or field
 //
-//	Delete("key"[,"key"])	--> DEL key [key]
-//	Delete("key", "field")	--> HDEL key field
+//	Delete("key")          --> DEL key
+//	Delete("key", "field") --> HDEL key field
 func (r *Redis) Delete(key string, keys ...string) error {
 	conn := r.pool.Get()
 	if nil == conn {
@@ -321,19 +265,11 @@ func (r *Redis) Delete(key string, keys ...string) error {
 	defer conn.Close()
 
 	cmd := "DEL"
-	typ := ""
 	size := len(keys)
 
 	if size > 0 {
-		r.lock.RLock()
-		if val, ok := r.types[key]; ok {
-			typ = val
-		}
-		r.lock.RUnlock()
 
-		if typ == "hash" {
-			cmd = "HDEL"
-		}
+		cmd = "HDEL"
 	}
 
 	keys1 := []interface{}{key, keys}
