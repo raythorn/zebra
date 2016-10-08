@@ -12,11 +12,9 @@ package context
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"html/template"
 	"net"
 	"net/http"
 	"regexp"
@@ -291,7 +289,7 @@ func (c *Context) JSON(data interface{}, indent bool) error {
 }
 
 // XML write xml-like data to client
-func (c *Context) XML(data interface{}, indent bool) {
+func (c *Context) XML(data interface{}, indent bool) error {
 
 	var err error
 	var content []byte
