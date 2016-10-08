@@ -10,6 +10,7 @@ import (
 	"github.com/raythorn/falcon/router"
 	"log"
 	"net/http"
+	"time"
 )
 
 var (
@@ -36,20 +37,38 @@ func (f *Falcon) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Falcon) run() {
-	log.Println("Server listen at 192.168.1.107:8080")
 
-	http.ListenAndServe("192.168.1.107:8080", f)
+	finish := make(chan bool, 1)
+
+	go func() {
+		host := Env.Host()
+		port := Env.Port()
+		addr := fmt.Sprintf("%s:%d", host, port)
+
+		if err := http.ListenAndServe(addr, f); err != nil {
+			log.Println("ListenAndServe fail")
+			time.Sleep(100 * time.Microsecond)
+			finish <- true
+		}
+	}()
+
 	if Env.TLS() {
 		go func() {
 			cert := Env.TLSCert()
 			key := Env.TLSKey()
+			host := Env.TLSHost()
 			port := Env.TLSPort()
 
-			addr := fmt.Sprintf(":%d", port)
-			http.ListenAndServeTLS(addr, cert, key, f)
+			addr := fmt.Sprintf("%s:%d", host, port)
+			if err := http.ListenAndServeTLS(addr, cert, key, f); err != nil {
+				log.Println("ListenAndServeTLS fail")
+				time.Sleep(100 * time.Microsecond)
+				finish <- true
+			}
 		}()
 	}
 
+	<-finish
 }
 
 func Run() {

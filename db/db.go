@@ -40,6 +40,9 @@ type Database interface {
 	//Query retrieve a record from database
 	Query(collection string, args ...interface{}) interface{}
 
+	//Count returns total number of records in collection
+	Count(collection string) int
+
 	//Ioctrl implement other operations
 	Ioctrl(cmd string, args ...interface{}) (interface{}, error)
 
