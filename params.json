@@ -1,6 +1,0 @@
-{
-  "name": "Falcon",
-  "tagline": "Convenient and efficient RESTful web framework in Go",
-  "body": "# falcon\r\nSimple HTTP framework for golang\r\n",
-  "note": "Don't delete this file! It's used internally to help with page regeneration."
-}
