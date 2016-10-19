@@ -4,17 +4,21 @@ import (
 	"github.com/raythorn/falcon/context"
 	"log"
 	"net/http"
-	"strings"
+	// "strings"
 )
 
 type Handler func(*context.Context)
+type Midware func(*context.Context) bool
 
 type Router interface {
 
-	// Add middleware to router, these handler will called before every request handler
-	Use(Handler)
+	// Add midware to router, these handler will called before every request handler.
+	// If more than one midware added, the will be called with their add order.
+	// If Midware return false, this session will be intercepted, and will return immediately，
+	// all following midwares and handlers will not be executed
+	Use(Midware)
 
-	NameSpace(*Route)
+	Group(string, ...interface{}) *Group
 
 	// Get adds a route for a HTTP GET request to the specified matching pattern.
 	Get(string, Handler)
@@ -51,81 +55,83 @@ type Router interface {
 }
 
 type router struct {
-	route      *Route
-	namespaces map[string]*Route
-	handlers   []Handler
+	route      *Group
+	group      *Group
+	midwares   []Midware
+	notfound   Handler
+	notallowed Handler
 }
 
 func New() Router {
 
-	r := &router{route: newRoute(), namespaces: make(map[string]*Route), handlers: make([]Handler, 0)}
+	r := &router{
+		route:      newGroup(),
+		group:      newGroup(),
+		midwares:   make([]Midware, 0),
+		notfound:   nil,
+		notallowed: nil,
+	}
+
 	r.route.pattern = "/"
-	r.route.cleanPath()
-	r.route.regexpCompile()
 
 	return r
 }
 
-func (r *router) Use(handler Handler) {
-	r.handlers = append(r.handlers, handler)
+func (r *router) Use(midware Midware) {
+	r.midwares = append(r.midwares, midware)
 }
 
-func (r *router) NameSpace(route *Route) {
-	if _, ok := r.namespaces[route.pattern]; ok {
-		panic("NameSpace exist!")
-	}
+func (r *router) Group(prefix string, args ...interface{}) *Group {
 
-	for prefix, _ := range r.namespaces {
-		if strings.HasPrefix(route.pattern, prefix) || strings.HasPrefix(prefix, route.pattern) {
-			panic("NameSpace has sub namespace or parent namespace, please unity them together!")
-		}
-	}
+	path := cleanPath(prefix)
 
-	r.namespaces[route.pattern] = route
+	return r.group.group(path, args...)
 }
 
 func (r *router) Get(pattern string, handler Handler) {
 
-	r.add("GET", pattern, handler)
+	r.route.insert("GET", pattern, handler)
 }
 
 func (r *router) Patch(pattern string, handler Handler) {
-	r.add("PATCH", pattern, handler)
+	r.route.insert("PATCH", pattern, handler)
 }
 
 func (r *router) Put(pattern string, handler Handler) {
-	r.add("PUT", pattern, handler)
+	r.route.insert("PUT", pattern, handler)
 }
 
 func (r *router) Post(pattern string, handler Handler) {
-	r.add("POST", pattern, handler)
+	r.route.insert("POST", pattern, handler)
 }
 
 func (r *router) Delete(pattern string, handler Handler) {
-	r.add("DELETE", pattern, handler)
+	r.route.insert("DELETE", pattern, handler)
 }
 
 func (r *router) Head(pattern string, handler Handler) {
-	r.add("HEAD", pattern, handler)
+	r.route.insert("HEAD", pattern, handler)
 }
 
 func (r *router) Options(pattern string, handler Handler) {
-	r.add("OPTIONS", pattern, handler)
+	r.route.insert("OPTIONS", pattern, handler)
 }
 
 func (r *router) Any(pattern string, handler Handler) {
-	r.add("ANY", pattern, handler)
+	r.route.insert("ANY", pattern, handler)
 }
 
 func (r *router) NotFound(handler Handler) {
-
+	r.notfound = handler
 }
 
 func (r *router) NotAllowed(handler Handler) {
-
+	r.notallowed = handler
 }
 
 func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
+
+	r.recovery()
 
 	ctx := context.New()
 	ctx.Reset(rw, req)
@@ -133,116 +139,69 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 	log.Printf("URI: %s", ctx.URI())
 	log.Printf("PATH: %s", ctx.URL())
 
-	//Call all middleware first
-	if len(r.handlers) > 0 {
-		for _, h := range r.handlers {
-			h(ctx)
+	//Call all midware first
+	if len(r.midwares) > 0 {
+		for _, midware := range r.midwares {
+			if !midware(ctx) {
+				return
+			}
 		}
 	}
 
-	//Match namespace first
-	if len(r.namespaces) > 0 {
-		log.Println("Namespace")
-		for pattern, route := range r.namespaces {
-
-			if strings.HasPrefix(ctx.URL(), pattern) {
-				handlers := map[string][]Handler{}
-				matchroute := route.match(ctx.Method(), ctx.URL(), handlers)
-
-				//Found route
-				if matchroute != nil {
-					matchroute.params(ctx)
-					if handler, ok := matchroute.actions[ctx.Method()]; ok {
-						if bfs, ok := handlers["before"]; ok && len(bfs) > 0 {
-							for _, bf := range bfs {
-								bf(ctx)
-							}
-						}
-
-						handler(ctx)
-
-						if afs, ok := handlers["after"]; ok && len(afs) > 0 {
-							for _, af := range afs {
-								af(ctx)
-							}
-						}
-					}
-
+	//Search Group
+	route := r.group.match(ctx)
+	if route != nil {
+		if route.group != nil && len(route.group.before) > 0 {
+			for _, midware := range route.group.before {
+				if !midware(ctx) {
 					return
 				}
 			}
 		}
-	}
 
-	log.Println("Match route")
-	matchroute := r.route.match(ctx.Method(), ctx.URL(), nil)
-	if matchroute != nil {
-		log.Println("Found route")
-		matchroute.params(ctx)
-		if handler, ok := matchroute.actions[ctx.Method()]; ok {
-			log.Printf("Excute %s", ctx.Method())
-			handler(ctx)
+		if h, ok := route.actions[ctx.Method()]; ok {
+			h(ctx)
 		} else {
-			log.Println("Panic")
+			if h, ok := route.actions[ctx.Method()]; ok {
+				h(ctx)
+			}
 		}
+
+		if route.group != nil && len(route.group.after) > 0 {
+			for _, midware := range route.group.after {
+				if !midware(ctx) {
+					return
+				}
+			}
+		}
+
+		return
 	}
 
+	route = r.route.match(ctx)
+	if route != nil {
+		if h, ok := route.actions[ctx.Method()]; ok {
+			h(ctx)
+		} else {
+			if h, ok := route.actions[ctx.Method()]; ok {
+				h(ctx)
+			}
+		}
+
+		return
+	}
+
+	if r.notfound != nil {
+		r.notfound(ctx)
+	} else {
+		http.NotFound(rw, req)
+	}
 }
 
-func (r *router) add(method, pattern string, handler Handler) *Route {
-	route := newRoute()
-
-	route.pattern = pattern
-	route.actions[method] = handler
-	route.cleanPath()
-	route.regexpCompile()
-
-	insertRoute(r.route, route)
-
-	return route
-}
-
-func insertRoute(root, route *Route) bool {
-
-	// Check if route is subroute of root
-	if ok := strings.HasPrefix(route.pattern, root.pattern); !ok {
-		log.Printf("The route to insert is not a sub-route of root!")
-		return false
-	}
-
-	//Same route with different actions
-	if root.pattern == route.pattern {
-		for m, h := range route.actions {
-			if _, ok := root.actions[m]; ok {
-				log.Printf("Method exist for %s, ignored", route.pattern)
-			} else {
-				root.actions[m] = h
-			}
+func (r *router) recovery() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("%s\n", err)
 		}
-
-		if route.before != nil && len(route.before) > 0 {
-			if root.before == nil {
-				root.before = make([]Handler, 0)
-			}
-			root.before = append(root.before, route.before...)
-		}
-
-		if route.after != nil && len(route.after) > 0 {
-			if root.after == nil {
-				root.after = make([]Handler, 0)
-			}
-			root.after = append(root.after, route.after...)
-		}
-	} else { //Sub-route
-		log.Println("Sub route")
-		if r, ok := root.routes[route.pattern]; ok {
-			if ok := insertRoute(r, route); !ok {
-				log.Printf("Insert route(%s) to route(%S) failed", route.pattern, root.pattern)
-				return false
-			}
-		} else {
-			root.routes[route.pattern] = route
-		}
-	}
-	return true
+	}()
 }

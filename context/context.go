@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"regexp"
@@ -32,11 +33,12 @@ type Context struct {
 	rw      http.ResponseWriter
 	request *http.Request
 	data    map[string]string
+	body    []byte
 }
 
 // Return a new Context instance
 func New() *Context {
-	return &Context{data: make(map[string]string)}
+	return &Context{data: make(map[string]string), body: []byte{}}
 }
 
 // Initialise Context with HTTP Request and ResponseWriter, it will parse the Request header,
@@ -56,6 +58,13 @@ func (c *Context) Reset(w http.ResponseWriter, r *http.Request) {
 	for k, v := range c.request.Form {
 		c.Set(k, strings.Join(v, ""))
 	}
+
+	if c.request.Body != nil {
+		defer c.request.Body.Close()
+		if body, err := ioutil.ReadAll(c.request.Body); err == nil {
+			c.body = body
+		}
+	}
 }
 
 // Get data from context
@@ -74,6 +83,10 @@ func (c *Context) Set(key, value string) {
 	}
 
 	c.data[key] = value
+}
+
+func (c *Context) Body() []byte {
+	return c.body
 }
 
 //Request relate method
@@ -263,6 +276,14 @@ func (c *Context) WriteString(data string) error {
 // Write bytes to client
 func (c *Context) Write(bytes []byte) (int, error) {
 	return c.rw.Write(bytes)
+}
+
+// Intercept write data with http status code, and current session will be finished
+func (c *Context) Intercept(data []byte, code int, reason string) error {
+	c.WriteHeader(code)
+	c.Write(data)
+	c.Flush()
+	panic(reason)
 }
 
 // JSON write json-like data to client

@@ -3,83 +3,62 @@ package router
 import (
 	"fmt"
 	"github.com/raythorn/falcon/context"
+	"log"
 	"regexp"
 	"strings"
 )
 
 type Route struct {
-	actions map[string]Handler
 	pattern string
 	regexp  *regexp.Regexp
-	before  []Handler
-	after   []Handler
-	routes  map[string]*Route
+	actions map[string]Handler
+	group   *Group
 }
 
 func newRoute() *Route {
-	return &Route{make(map[string]Handler), "", nil, nil, nil, make(map[string]*Route)}
+	return &Route{"", nil, make(map[string]Handler), nil}
 }
 
-func (r *Route) match(method, path string, handlers map[string][]Handler) *Route {
+func (r *Route) insert(route *Route) {
 
-	//Only namespace route can use this operation
-	if handlers != nil {
-		if r.before != nil && len(r.before) > 0 {
-
-			if h, ok := handlers["before"]; !ok {
-				h = make([]Handler, 0)
-				h = append(h, r.before...)
-				handlers["before"] = h
-			} else {
-				h = append(h, r.before...)
-			}
-		}
-
-		if r.after != nil && len(r.after) > 0 {
-
-			if h, ok := handlers["after"]; !ok {
-				h = make([]Handler, 0)
-				h = append(h, r.after...)
-				handlers["after"] = h
-			} else {
-				h = append(h, r.after...)
-			}
-		}
+	if r.group != route.group {
+		log.Printf("Route with different group, ignored.\n")
+		return
 	}
 
-	if _, ok := r.actions[method]; ok {
-
-		if path == r.pattern {
-			return r
-		}
-
-		matches := r.regexp.FindStringSubmatch(path)
-		if len(matches) > 0 && matches[0] == path {
-
-			return r
+	for m, h := range route.actions {
+		if _, ok := r.actions[m]; ok {
+			log.Printf("Method(%s) existed for %s, ignored!\n", m, route.pattern)
+		} else {
+			r.actions[m] = h
 		}
 	}
-
-	//Handle sub-routes
-	if len(r.routes) > 0 {
-		for _, route := range r.routes {
-			subroute := route.match(method, path, handlers)
-			if subroute != nil {
-				return subroute
-			}
-		}
-	}
-
-	return nil
 }
 
-func (r *Route) params(ctx *context.Context) {
-	matchs := r.regexp.FindStringSubmatch(ctx.URI())
-	for i, name := range r.regexp.SubexpNames() {
-		if len(name) > 0 {
-			ctx.Set(name, matchs[i])
+func (r *Route) match(ctx *context.Context) bool {
+
+	if _, ok := r.actions[ctx.Method()]; !ok {
+		if _, ok := r.actions["ANY"]; !ok {
+			return false
 		}
 	}
+
+	if ctx.URL() == r.pattern {
+		return true
+	}
+
+	matches := r.regexp.FindStringSubmatch(ctx.URL())
+	if len(matches) > 0 && matches[0] == ctx.URL() {
+		for i, name := range r.regexp.SubexpNames() {
+			log.Println(name)
+			if len(name) > 0 {
+				ctx.Set(name, matches[i])
+			}
+		}
+		return true
+	}
+
+	return false
 }
 
 func (r *Route) regexpCompile() {
@@ -111,12 +90,11 @@ func (r *Route) regexpCompile() {
 //
 // If the result of this process is an empty string, "/" is returned
 
-func (r *Route) cleanPath() {
+func cleanPath(pattern string) string {
 
-	path := r.pattern
+	path := pattern
 	if path == "" {
-		r.pattern = "/"
-		return
+		return "/"
 	}
 
 	read := 1
@@ -181,8 +159,8 @@ func (r *Route) cleanPath() {
 	}
 
 	if buf != nil {
-		r.pattern = string(buf[:write])
+		return string(buf[:write])
 	} else {
-		r.pattern = string(r.pattern[:write])
+		return string(pattern[:write])
 	}
 }

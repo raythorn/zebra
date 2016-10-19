@@ -14,29 +14,25 @@ import (
 )
 
 var (
-	falcon *Falcon
+	falcon *app
 	Env    *Environment
 )
 
 func init() {
-	falcon = New()
+	falcon = &app{router.New(), &router.Group{}}
 	Env = &Environment{data: make(map[string]string)}
 }
 
-type Falcon struct {
+type app struct {
 	router.Router
-	namespace *router.NameSpace
+	g *router.Group
 }
 
-func New() *Falcon {
-	return &Falcon{router.New(), router.NewNameSpace()}
-}
-
-func (f *Falcon) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+func (f *app) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	f.Handle(rw, req)
 }
 
-func (f *Falcon) run() {
+func (f *app) run() {
 
 	finish := make(chan bool, 1)
 
@@ -44,6 +40,8 @@ func (f *Falcon) run() {
 		host := Env.Host()
 		port := Env.Port()
 		addr := fmt.Sprintf("%s:%d", host, port)
+
+		log.Printf("Server listen at %s", addr)
 
 		if err := http.ListenAndServe(addr, f); err != nil {
 			log.Println("ListenAndServe fail")
@@ -75,7 +73,7 @@ func Run() {
 	falcon.run()
 }
 
-func Use(handler router.Handler) {
+func Use(handler router.Midware) {
 	falcon.Use(handler)
 }
 
@@ -119,44 +117,39 @@ func NotAllowed(handler router.Handler) {
 	falcon.NotAllowed(handler)
 }
 
-func NameSpace(prefix string, routes ...*router.Route) *router.NameSpace {
+func Group(prefix string, routes ...interface{}) *router.Group {
 
-	ns := router.NewNameSpace()
-	ns.NameSpace(prefix, routes...)
-
-	falcon.Router.NameSpace(ns.Route)
-
-	return ns
+	return falcon.Router.Group(prefix, routes...)
 }
 
-func NSGet(pattern string, handler router.Handler) *router.Route {
-	return falcon.namespace.Get(pattern, handler)
+func GGet(pattern string, handler router.Handler) *router.Route {
+	return falcon.g.Get(pattern, handler)
 }
 
-func NSPatch(pattern string, handler router.Handler) *router.Route {
-	return falcon.namespace.Patch(pattern, handler)
+func GPatch(pattern string, handler router.Handler) *router.Route {
+	return falcon.g.Patch(pattern, handler)
 }
 
-func NSPut(pattern string, handler router.Handler) *router.Route {
-	return falcon.namespace.Put(pattern, handler)
+func GPut(pattern string, handler router.Handler) *router.Route {
+	return falcon.g.Put(pattern, handler)
 }
 
-func NSPost(pattern string, handler router.Handler) *router.Route {
-	return falcon.namespace.Post(pattern, handler)
+func GPost(pattern string, handler router.Handler) *router.Route {
+	return falcon.g.Post(pattern, handler)
 }
 
-func NSDelete(pattern string, handler router.Handler) *router.Route {
-	return falcon.namespace.Delete(pattern, handler)
+func GDelete(pattern string, handler router.Handler) *router.Route {
+	return falcon.g.Delete(pattern, handler)
 }
 
-func NSHead(pattern string, handler router.Handler) *router.Route {
-	return falcon.namespace.Head(pattern, handler)
+func GHead(pattern string, handler router.Handler) *router.Route {
+	return falcon.g.Head(pattern, handler)
 }
 
-func NSOptions(pattern string, handler router.Handler) *router.Route {
-	return falcon.namespace.Options(pattern, handler)
+func GOptions(pattern string, handler router.Handler) *router.Route {
+	return falcon.g.Options(pattern, handler)
 }
 
-func NSAny(pattern string, handler router.Handler) *router.Route {
-	return falcon.namespace.Any(pattern, handler)
+func GAny(pattern string, handler router.Handler) *router.Route {
+	return falcon.g.Any(pattern, handler)
 }
