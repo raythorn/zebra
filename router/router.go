@@ -136,8 +136,8 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 	ctx := context.New()
 	ctx.Reset(rw, req)
 
-	log.Printf("URI: %s", ctx.URI())
-	log.Printf("PATH: %s", ctx.URL())
+	// log.Printf("URI: %s", ctx.URI())
+	// log.Printf("PATH: %s", ctx.URL())
 
 	//Call all midware first
 	if len(r.midwares) > 0 {

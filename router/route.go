@@ -48,9 +48,10 @@ func (r *Route) match(ctx *context.Context) bool {
 	}
 
 	matches := r.regexp.FindStringSubmatch(ctx.URL())
+
 	if len(matches) > 0 && matches[0] == ctx.URL() {
 		for i, name := range r.regexp.SubexpNames() {
-			log.Println(name)
+			// log.Println(name)
 			if len(name) > 0 {
 				ctx.Set(name, matches[i])
 			}
@@ -67,7 +68,11 @@ func (r *Route) regexpCompile() {
 		return fmt.Sprintf(`(?P<%s>[^/#?]+)`, m[1:])
 	})
 
-	pattern := r.pattern + `\/?`
+	pattern := r.pattern
+	if !strings.HasSuffix(pattern, `\/?`) {
+		pattern += `\/?`
+	}
+
 	r.regexp = regexp.MustCompile(pattern)
 	if strings.Contains(r.pattern, "(?P") {
 		r.pattern = pattern

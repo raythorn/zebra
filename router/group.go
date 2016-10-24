@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/raythorn/falcon/context"
+	// "log"
 	"strings"
 )
 
@@ -82,6 +83,7 @@ func (g *Group) group(prefix string, args ...interface{}) *Group {
 
 	if len(args) > 0 {
 		if sub, ok := args[0].(bool); ok && sub {
+			// log.Println("subgroup")
 			group := newGroup()
 			return group.sub(prefix, args...)
 		}
@@ -96,7 +98,7 @@ func (g *Group) sub(pattern string, args ...interface{}) *Group {
 		switch arg.(type) {
 		case *Route:
 			route, _ := arg.(*Route)
-			route.pattern = pattern + route.pattern
+			route.pattern = cleanPath(pattern + route.pattern)
 			route.regexpCompile()
 			route.group = g
 
@@ -105,23 +107,24 @@ func (g *Group) sub(pattern string, args ...interface{}) *Group {
 					r.actions[m] = h
 				}
 			} else {
-				g.routes[route.pattern] = r
+				g.routes[route.pattern] = route
 			}
 		case *Group:
 			grp, _ := arg.(*Group)
-			grp.pattern = pattern + grp.pattern
-
+			grp.pattern = cleanPath(pattern + grp.pattern)
 			g.groups[grp.pattern] = grp
+
 			if len(grp.routes) > 0 {
 				for _, route := range grp.routes {
-					route.pattern = pattern + route.pattern
+					route.pattern = cleanPath(pattern + route.pattern)
+					route.regexpCompile()
 					g.routes[route.pattern] = route
 				}
 			}
 
 			if len(grp.groups) > 0 {
 				for _, group := range grp.groups {
-					group.pattern = pattern + group.pattern
+					group.pattern = cleanPath(pattern + group.pattern)
 					g.groups[group.pattern] = group
 					if len(grp.before) > 0 {
 						if group.before == nil {
@@ -174,13 +177,18 @@ func (g *Group) insert(method, pattern string, handler Handler) *Route {
 
 func (g *Group) match(ctx *context.Context) *Route {
 
+	// for p, _ := range g.routes {
+	// 	log.Println(p)
+	// }
 	if r, ok := g.routes[ctx.URL()]; ok {
 		if r.match(ctx) {
 			return r
 		}
 	} else {
+
 		for p, r := range g.routes {
 			if strings.Contains(p, "(?P") {
+				// log.Println("REGREX")
 				if r.match(ctx) {
 					return r
 				}
