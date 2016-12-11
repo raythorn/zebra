@@ -5,10 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"strconv"
 	"strings"
 	"time"
+)
+
+const (
+	Base64Pattern = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+_"
 )
 
 //Token type
@@ -38,19 +40,17 @@ func (t *Token) Get(key string) interface{} {
 
 func (t *Token) Sign() (string, error) {
 
-	var iss string
-	var uid string
 	var exp time.Time
 	var nbf time.Time
 
 	if value, ok := t.claims["iss"]; ok {
-		if iss, ok = value.(string); !ok {
+		if _, ok = value.(string); !ok {
 			return "", errors.New("Token: Issuer Not Set.")
 		}
 	}
 
 	if value, ok := t.claims["uid"]; ok {
-		if uid, ok = value.(string); !ok {
+		if _, ok = value.(string); !ok {
 			return "", errors.New("Token: User ID Not Set.")
 		}
 	}
@@ -67,7 +67,7 @@ func (t *Token) Sign() (string, error) {
 		}
 	}
 
-	if exp.Before(time.Now) || nbf.Before(time.Now() || exp.Before(nbf)) {
+	if exp.Before(time.Now()) || nbf.Before(time.Now()) || exp.Before(nbf) {
 		return "", errors.New("Token: Expire time or Issue at time invalid.")
 	}
 
@@ -111,7 +111,7 @@ func (t *Token) Verify(token string) error {
 		return errors.New("Decode claim failed")
 	}
 
-	if err := json.Unmarshal(claimstr, &t.claims); err != nil {
+	if err := json.Unmarshal([]byte(claimstr), &t.claims); err != nil {
 		return errors.New("Unmarshal claims failed")
 	}
 
@@ -145,7 +145,7 @@ func (t *Token) Verify(token string) error {
 func (t *Token) sign(claim string) string {
 
 	h := sha256.New224()
-	_, err = h.Write(claim)
+	_, err := h.Write([]byte(claim))
 	if nil != err {
 		return ""
 	}

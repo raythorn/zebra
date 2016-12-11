@@ -70,7 +70,7 @@ func (api *APISign) Sign() (string, error) {
 
 	signString := strings.Join(sorted, ".")
 	hash := md5.New()
-	_, err = hash.Write([]byte(signString))
+	_, err := hash.Write([]byte(signString))
 	if nil != err {
 		return "", errors.New("Sign: Hash failed")
 	}

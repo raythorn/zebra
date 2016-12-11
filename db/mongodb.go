@@ -23,6 +23,7 @@ func (m *MongoDB) session() *mgo.Session {
 	if m.sess == nil {
 		m.sess, err = mgo.Dial(m.uri)
 		if err != nil {
+			log.Println("Error Dail")
 			return nil
 		}
 	}
@@ -32,9 +33,8 @@ func (m *MongoDB) session() *mgo.Session {
 
 func (m *MongoDB) Make(uri string) Database {
 
-	m.uri = uri
 	db := &MongoDB{
-		sess:     m.session(),
+		sess:     nil,
 		uri:      uri,
 		database: "",
 	}
@@ -59,6 +59,10 @@ func (m *MongoDB) Use(db string) error {
 func (m *MongoDB) Drop(db string, args ...interface{}) error {
 
 	session := m.session()
+	if session == nil {
+		return errors.New("Cannot connect to mongodb")
+	}
+
 	defer session.Close()
 
 	size := len(args)
@@ -76,6 +80,10 @@ func (m *MongoDB) Drop(db string, args ...interface{}) error {
 //Insert add a data to database
 func (m *MongoDB) Insert(collection string, args ...interface{}) error {
 	session := m.session()
+	if session == nil {
+		return errors.New("Cannot connect to mongodb")
+	}
+
 	defer session.Close()
 
 	c := session.DB(m.database).C(collection)

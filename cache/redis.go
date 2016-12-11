@@ -105,7 +105,11 @@ func (r *Redis) Set(key string, args ...interface{}) error {
 	}
 
 	if cmd != "" {
-		args1 := []interface{}{key, args}
+
+		args1 := []interface{}{key}
+		for _, arg := range args {
+			args1 = append(args1, arg)
+		}
 
 		log.Println(args1)
 		_, err = conn.Do(cmd, args1...)
@@ -140,14 +144,29 @@ func (r *Redis) Get(key string, args ...string) interface{} {
 		cmd = "HMGET"
 	}
 
-	args1 := []interface{}{key, args}
+	var val interface{}
+	var err error
 
-	if val, err := conn.Do(cmd, args1); err == nil {
-		return val
+	if cmd == "GET" {
+		val, err = conn.Do(cmd, key)
 	} else {
-		return nil
+		args1 := []interface{}{key}
+		for _, arg := range args {
+			args1 = append(args1, arg)
+		}
+
+		log.Println(args1)
+
+		val, err = conn.Do(cmd, args1...)
 	}
 
+	if err == nil {
+		return val
+	}
+
+	log.Println(err.Error())
+
+	return nil
 }
 
 //Incr increase key's value
@@ -177,8 +196,11 @@ func (r *Redis) Incr(key string, args ...interface{}) error {
 	}
 
 	if cmd != "" && err == nil {
-		args1 := []interface{}{key, args}
-		_, err = conn.Do(cmd, args1)
+		args1 := []interface{}{key}
+		for _, arg := range args {
+			args1 = append(args1, arg)
+		}
+		_, err = conn.Do(cmd, args1...)
 		return err
 	}
 
@@ -212,8 +234,11 @@ func (r *Redis) Decr(key string, args ...interface{}) error {
 	}
 
 	if cmd != "" && err == nil {
-		args1 := []interface{}{key, args}
-		_, err = conn.Do(cmd, args1)
+		args1 := []interface{}{key}
+		for _, arg := range args {
+			args1 = append(args1, arg)
+		}
+		_, err = conn.Do(cmd, args1...)
 		return err
 	}
 
@@ -244,8 +269,11 @@ func (r *Redis) Exist(key string, args ...interface{}) bool {
 		return false
 	}
 
-	args1 := []interface{}{key, args}
-	if exists, err := redigo.Bool(conn.Do(cmd, args1)); err == nil {
+	args1 := []interface{}{key}
+	for _, arg := range args {
+		args1 = append(args1, arg)
+	}
+	if exists, err := redigo.Bool(conn.Do(cmd, args1...)); err == nil {
 		return exists
 	} else {
 		log.Println(err)
@@ -272,7 +300,10 @@ func (r *Redis) Delete(key string, keys ...string) error {
 		cmd = "HDEL"
 	}
 
-	keys1 := []interface{}{key, keys}
+	keys1 := []interface{}{key}
+	for _, k := range keys {
+		keys1 = append(keys1, k)
+	}
 	_, err := conn.Do(cmd, keys1...)
 
 	return err
