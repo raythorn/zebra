@@ -123,7 +123,12 @@ func (m *MongoDB) Update(collection string, args ...interface{}) error {
 //Query retrieve a record from database
 func (m *MongoDB) Query(collection string, args ...interface{}) interface{} {
 
-	if len(args) != 1 {
+	if len(args) != 3 {
+		return errors.New("MongoDB: invalid args")
+	}
+
+	all, ok := args[2].(bool)
+	if !ok {
 		return errors.New("MongoDB: invalid args")
 	}
 
@@ -132,7 +137,11 @@ func (m *MongoDB) Query(collection string, args ...interface{}) interface{} {
 
 	c := session.DB(m.database).C(collection)
 
-	return c.Find(args[0])
+	if all {
+		return c.Find(args[0]).All(args[1])
+	} else {
+		return c.Find(args[0]).One(args[1])
+	}
 }
 
 //Count returns total number of records in collection, otherwise, -1 returned

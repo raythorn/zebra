@@ -33,12 +33,13 @@ type Context struct {
 	rw      http.ResponseWriter
 	request *http.Request
 	data    map[string]string
+	form    map[string]string
 	body    []byte
 }
 
 // Return a new Context instance
 func New() *Context {
-	return &Context{data: make(map[string]string), body: []byte{}}
+	return &Context{data: make(map[string]string), form: make(map[string]string), body: []byte{}}
 }
 
 // Initialise Context with HTTP Request and ResponseWriter, it will parse the Request header,
@@ -57,6 +58,7 @@ func (c *Context) Reset(w http.ResponseWriter, r *http.Request) {
 	c.request.ParseForm()
 	for k, v := range c.request.Form {
 		c.Set(k, strings.Join(v, ""))
+		c.form[k] = strings.Join(v, "")
 	}
 
 	if c.request.Body != nil {
@@ -87,6 +89,10 @@ func (c *Context) Set(key, value string) {
 
 func (c *Context) Body() []byte {
 	return c.body
+}
+
+func (c *Context) Form() map[string]string {
+	return c.form
 }
 
 //Request relate method
