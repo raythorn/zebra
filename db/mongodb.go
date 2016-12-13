@@ -121,7 +121,7 @@ func (m *MongoDB) Update(collection string, args ...interface{}) error {
 }
 
 //Query retrieve a record from database
-func (m *MongoDB) Query(collection string, args ...interface{}) interface{} {
+func (m *MongoDB) Query(collection string, args ...interface{}) error {
 
 	if len(args) != 3 {
 		return errors.New("MongoDB: invalid args")

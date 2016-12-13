@@ -38,7 +38,7 @@ type Database interface {
 	Update(collection string, args ...interface{}) error
 
 	//Query retrieve a record from database
-	Query(collection string, args ...interface{}) interface{}
+	Query(collection string, args ...interface{}) error
 
 	//Count returns total number of records in collection
 	Count(collection string) int
@@ -122,7 +122,7 @@ func Update(collection string, args ...interface{}) error {
 	return dbInstance.engine.Update(collection, args...)
 }
 
-func Query(collection string, args ...interface{}) interface{} {
+func Query(collection string, args ...interface{}) error {
 	if dbInstance.engine == nil {
 		return errors.New("DB: engine invalid")
 	}
