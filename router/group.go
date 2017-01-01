@@ -2,7 +2,6 @@ package router
 
 import (
 	"github.com/raythorn/falcon/context"
-	// "log"
 	"strings"
 )
 

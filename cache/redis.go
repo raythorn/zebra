@@ -3,7 +3,7 @@ package cache
 import (
 	"errors"
 	redigo "github.com/garyburd/redigo/redis"
-	"log"
+	"github.com/raythorn/falcon/log"
 	"time"
 )
 
@@ -132,7 +132,7 @@ func (r *Redis) Get(key string, args ...string) interface{} {
 
 	conn := r.pool.Get()
 	if nil == conn {
-		log.Println(errors.New("Redis: get connection from pool failed"))
+		log.Error("Redis: get connection from pool failed")
 		return nil
 	}
 	defer conn.Close()
@@ -253,7 +253,7 @@ func (r *Redis) Exist(key string, args ...interface{}) bool {
 
 	conn := r.pool.Get()
 	if nil == conn {
-		log.Println(errors.New("Redis: get connection from pool failed"))
+		log.Error("Redis: get connection from pool failed")
 		return false
 	}
 	defer conn.Close()
@@ -265,7 +265,7 @@ func (r *Redis) Exist(key string, args ...interface{}) bool {
 	} else if size == 1 {
 		cmd = "HEXISTS"
 	} else {
-		log.Println(errors.New("Redis: invalid args"))
+		log.Error("Redis: invalid args")
 		return false
 	}
 
@@ -328,7 +328,7 @@ func (r *Redis) Expire(key string, time int64) error {
 func (r *Redis) TTL(key string) int64 {
 	conn := r.pool.Get()
 	if nil == conn {
-		log.Println(errors.New("Redis: get connection from pool failed"))
+		log.Error("Redis: get connection from pool failed")
 		return -2
 	}
 	defer conn.Close()

@@ -2,9 +2,8 @@ package router
 
 import (
 	"github.com/raythorn/falcon/context"
-	"log"
+	"github.com/raythorn/falcon/log"
 	"net/http"
-	// "strings"
 )
 
 type Handler func(*context.Context)
@@ -201,7 +200,7 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 func (r *router) recovery() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("%s\n", err)
+			log.Error("%s\n", err)
 		}
 	}()
 }

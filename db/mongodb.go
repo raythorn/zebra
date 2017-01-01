@@ -2,8 +2,8 @@ package db
 
 import (
 	"errors"
+	"github.com/raythorn/falcon"
 	mgo "gopkg.in/mgo.v2"
-	"log"
 	"sync"
 )
 
@@ -23,7 +23,7 @@ func (m *MongoDB) session() *mgo.Session {
 	if m.sess == nil {
 		m.sess, err = mgo.Dial(m.uri)
 		if err != nil {
-			log.Println("Error Dail")
+			log.Error("Error Dail")
 			return nil
 		}
 	}

@@ -7,8 +7,8 @@ package falcon
 
 import (
 	"fmt"
+	"github.com/raythorn/falcon/log"
 	"github.com/raythorn/falcon/router"
-	"log"
 	"net/http"
 	"time"
 )
@@ -41,10 +41,10 @@ func (f *app) run() {
 		port := Env.Port()
 		addr := fmt.Sprintf("%s:%d", host, port)
 
-		log.Printf("Server listen at %s", addr)
+		log.Info("Server listen at %s", addr)
 
 		if err := http.ListenAndServe(addr, f); err != nil {
-			log.Println("ListenAndServe fail")
+			log.Error("ListenAndServe fail")
 			time.Sleep(100 * time.Microsecond)
 			finish <- true
 		}
@@ -59,7 +59,7 @@ func (f *app) run() {
 
 			addr := fmt.Sprintf("%s:%d", host, port)
 			if err := http.ListenAndServeTLS(addr, cert, key, f); err != nil {
-				log.Println("ListenAndServeTLS fail")
+				log.Error("ListenAndServeTLS fail")
 				time.Sleep(100 * time.Microsecond)
 				finish <- true
 			}
