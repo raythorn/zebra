@@ -111,7 +111,6 @@ func (r *Redis) Set(key string, args ...interface{}) error {
 			args1 = append(args1, arg)
 		}
 
-		log.Println(args1)
 		_, err = conn.Do(cmd, args1...)
 
 	} else {
@@ -155,8 +154,6 @@ func (r *Redis) Get(key string, args ...string) interface{} {
 			args1 = append(args1, arg)
 		}
 
-		log.Println(args1)
-
 		val, err = conn.Do(cmd, args1...)
 	}
 
@@ -164,7 +161,7 @@ func (r *Redis) Get(key string, args ...string) interface{} {
 		return val
 	}
 
-	log.Println(err.Error())
+	log.Error(err.Error())
 
 	return nil
 }
@@ -276,7 +273,7 @@ func (r *Redis) Exist(key string, args ...interface{}) bool {
 	if exists, err := redigo.Bool(conn.Do(cmd, args1...)); err == nil {
 		return exists
 	} else {
-		log.Println(err)
+		log.Error(err.Error())
 		return false
 	}
 }

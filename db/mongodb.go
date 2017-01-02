@@ -2,7 +2,7 @@ package db
 
 import (
 	"errors"
-	"github.com/raythorn/falcon"
+	"github.com/raythorn/falcon/log"
 	mgo "gopkg.in/mgo.v2"
 	"sync"
 )
@@ -154,7 +154,7 @@ func (m *MongoDB) Count(collection string) int {
 	if n, err := c.Count(); err == nil {
 		return n
 	} else {
-		log.Println(err)
+		log.Error(err.Error())
 		return -1
 	}
 }
