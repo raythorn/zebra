@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+//Console logger, print log message to console, and each message level has
+//different color
 type console struct {
 	level  int
 	colors []string
@@ -12,6 +14,7 @@ type console struct {
 	quit   chan bool
 }
 
+//Create new console logger
 func NewConsoleLogger(level int) Logger {
 	c := &console{
 		level: level,
@@ -32,6 +35,7 @@ func NewConsoleLogger(level int) Logger {
 	return c
 }
 
+//run is goroutine which actually handle the log message
 func (c *console) run() {
 
 	for {
@@ -44,6 +48,7 @@ func (c *console) run() {
 	}
 }
 
+//flush print all the buffer message to console
 func (c *console) flush() {
 
 	for {

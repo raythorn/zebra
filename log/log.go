@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//Log level
 const (
 	DEBUG = iota
 	INFO
@@ -17,6 +18,7 @@ const (
 	PANIC
 )
 
+//Capacity of buffer channel
 const (
 	BUFFER_CAPACITY = 16
 )
@@ -31,6 +33,7 @@ func init() {
 	Add("console", DEBUG)
 }
 
+//Log message record, minimal log dispatch unit
 type Record struct {
 	level     int
 	verbose   string
@@ -38,9 +41,13 @@ type Record struct {
 	timestamp time.Time
 }
 
+//Logger interface, all supported logger MUST implement this interface
 type Logger interface {
+	//Return logger's level
 	Level() int
+	//Write a message to logger
 	Write(record *Record)
+	//Close logger
 	Close()
 }
 
@@ -49,6 +56,7 @@ type logger struct {
 	channel map[string]Logger
 }
 
+//Internal log function
 func (l *logger) log(level int, format string, args ...interface{}) {
 
 	skip := true
@@ -99,6 +107,9 @@ func (l *logger) close() {
 	}
 }
 
+//Log package default add one logger(console), means default all the log message will
+//print to console. But you can use this function to add new logger to log engine, and
+//current only two logger supported, "console" and "file".
 func Add(logger string, level int, args ...interface{}) error {
 
 	var err error = nil
@@ -117,31 +128,38 @@ func Add(logger string, level int, args ...interface{}) error {
 	return err
 }
 
+//Close log engine
 func Close() {
 	log4f.close()
 }
 
+//Debug print debug message
 func Debug(format string, args ...interface{}) {
 	log4f.log(DEBUG, format, args...)
 }
 
+//Info print infomation message
 func Info(format string, args ...interface{}) {
 	log4f.log(INFO, format, args...)
 }
 
+//Warning print warning message
 func Warning(format string, args ...interface{}) {
 	log4f.log(WARN, format, args...)
 }
 
+//Error print error message
 func Error(format string, args ...interface{}) {
 	log4f.log(ERROR, format, args...)
 }
 
+//Fatal print fatal error message, and app will quit if this function called
 func Fatal(format string, args ...interface{}) {
 	log4f.log(FATAL, format, args...)
 	os.Exit(0)
 }
 
+//Panic print panic message, and app will trigger panic message if called
 func Panic(format string, args ...interface{}) {
 	log4f.log(PANIC, format, args...)
 	msg := format

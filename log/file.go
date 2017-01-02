@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+//file logger print log message to a specified file, log file will rotate to new
+//file daily, and will cleanup old log files, the file logger engine cached one
+//month's log data and will remove older log files
 type file struct {
 	level    int
 	path     string
