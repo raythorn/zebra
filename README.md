@@ -54,11 +54,27 @@ func user_get(ctx *context.Context) {
 	ctx.WriteString("Falcon")	
 }
 
-falcon.Get("/user", user_create)
+falcon.Get("/user", user_get)
 ```
 ### Context
+falcon provides a context which contains http.RespondWriter and http.Request for http, and a simple cache to store temporary
+data, such as http request header, request parametr along with the url and form, named regexps and, of course, custom variables.
+And it has several convenient APIs to handle http related jobs.
 ### Routers
+falcon supports fixed route and regular expression route.
 ### Groups
+falcon supports group api with same function.
+```go
+falcon.Group("/user"
+	falcon.GGet("", handler),
+	falcon.GPut("", handler),
+	falcon.GSub("/friends",
+		falcon.GGet("", handler),
+		falcon.GPut("", handler),
+	),
+)
+```
+GGET/GGPut/... is same as Get/Put... APIs, which add related route to group, and GSub can add a sub-group to current group.
 
 ## Authority
 ### API Signature
@@ -72,6 +88,7 @@ falcon.Get("/user", user_create)
 ### MongoDB
 
 ## Log
+Logger for falcon, it can print log to both console and file. It default logs to console, and you can user log.Add("file", "/tmp/log") to add log to file. Log file will be named with current date, and rotate to new file in 12:00pm, also cleanup older log files, system cached the latest files in a month.
 
 ## LICENSE
 
