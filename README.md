@@ -1,8 +1,39 @@
 ## Falcon
 
-falcon is a simple framework for developing RESTful APIs and backend services in Go.
-It's first idea refer to [Beego](http://beego.me) and [Martini](http://martini.codegangsta.io), and simplify them to construct falcon.
-And falcon also provided some convenient utilities, such as api sign, token, cache and database.
+falcon is a simple but convenient framework for quickly developing RESTful APIs web applications/services in Go.
+
+## Quick Start
+#### Download and install
+
+	go get github.com/raythorn/falcon
+
+###### Create file `test.go`
+```go
+package main
+
+import "github.com/raythorn/falcon"
+
+func main() {
+	falcon.Run()
+}
+
+```
+###### Build and run
+```bash
+	go build test.go
+	./test
+```
+######Congratulations! 
+You just built your first falcon app.
+
+## Features
+* [RESTful API](#RESTful API)
+* [Authority](#Authority)
+* [Cache](#Cache)
+* [Database](#Database)
+* [Log](#Log)
+
+#### RESTful API
 
 ## LICENSE
 
