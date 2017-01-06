@@ -28,6 +28,7 @@ You just built your first falcon app.
 
 ## Features
 * [RESTful API](#restful-api)
+	* [Context](#context)
 	* [Routers](#routers)
 	* [Groups](#groups)
 * [Authority](#authority)
@@ -41,6 +42,21 @@ You just built your first falcon app.
 * [Log](#log)
 
 ## RESTful API
+falcon provides RESTful APIs, you can easily writing RESTful hanlder with Get/Put/Post/Delete/Patch/Options/Head/Any.
+Take Get for example:
+```go
+import (
+	"github.com/raythorn/falcon"
+	"github.com/raythorn/falcon/context"
+)
+
+func user_get(ctx *context.Context) {
+	ctx.WriteString("Falcon")	
+}
+
+falcon.Get("/user", user_create)
+```
+### Context
 ### Routers
 ### Groups
 
