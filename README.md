@@ -62,19 +62,27 @@ data, such as http request header, request parametr along with the url and form,
 And it has several convenient APIs to handle http related jobs.
 ### Routers
 falcon supports fixed route and regular expression route.
+
+```go
+falcon.Get("/user", handler) //fixed route
+
+falcon.Get("/user/:id", handler) //regexp route, match /user/123 ..., and id will be set in context
+
+falcon.Get("/user/(?P<name>exp)", handler) //named regexp route, name will be set in context
+```
 ### Groups
 falcon supports group api with same function.
 ```go
 falcon.Group("/user"
-	falcon.GGet("", handler),
+	falcon.GGet("", handler),	//Match "/user"
 	falcon.GPut("", handler),
 	falcon.GSub("/friends",
-		falcon.GGet("", handler),
+		falcon.GGet("", handler), //Match "/user/friends"
 		falcon.GPut("", handler),
 	),
 )
 ```
-GGET/GGPut/... is same as Get/Put... APIs, which add related route to group, and GSub can add a sub-group to current group.
+GGet/GGPut/... is same as Get/Put... APIs, which add related route to group, and GSub can add a sub-group to current group.
 
 ## Authority
 ### API Signature
