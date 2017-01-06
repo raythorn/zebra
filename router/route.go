@@ -3,7 +3,7 @@ package router
 import (
 	"fmt"
 	"github.com/raythorn/falcon/context"
-	"github.com/raythorn/falcon/log"
+	// "github.com/raythorn/falcon/log"
 	"regexp"
 	"strings"
 )
@@ -17,22 +17,6 @@ type Route struct {
 
 func newRoute() *Route {
 	return &Route{"", nil, make(map[string]Handler), nil}
-}
-
-func (r *Route) insert(route *Route) {
-
-	if r.group != route.group {
-		log.Info("Route with different group, ignored.\n")
-		return
-	}
-
-	for m, h := range route.actions {
-		if _, ok := r.actions[m]; ok {
-			log.Info("Method(%s) existed for %s, ignored!\n", m, route.pattern)
-		} else {
-			r.actions[m] = h
-		}
-	}
 }
 
 func (r *Route) match(ctx *context.Context) bool {

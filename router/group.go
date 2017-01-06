@@ -45,6 +45,11 @@ func (g *Group) After(midwares ...Midware) *Group {
 	return g
 }
 
+func (g *Group) Sub(prefix string, args ...interface{}) *Group {
+	group := newGroup()
+	return group.group(prefix, args...)
+}
+
 func (g *Group) Get(pattern string, handler Handler) *Route {
 	return g.add("GET", pattern, handler)
 }
@@ -78,20 +83,7 @@ func (g *Group) Any(pattern string, handler Handler) *Route {
 	return g.add("ANY", pattern, handler)
 }
 
-func (g *Group) group(prefix string, args ...interface{}) *Group {
-
-	if len(args) > 0 {
-		if sub, ok := args[0].(bool); ok && sub {
-			// log.Println("subgroup")
-			group := newGroup()
-			return group.sub(prefix, args...)
-		}
-	}
-
-	return g.sub(prefix, args...)
-}
-
-func (g *Group) sub(pattern string, args ...interface{}) *Group {
+func (g *Group) group(pattern string, args ...interface{}) *Group {
 
 	for _, arg := range args {
 		switch arg.(type) {
@@ -176,9 +168,6 @@ func (g *Group) insert(method, pattern string, handler Handler) *Route {
 
 func (g *Group) match(ctx *context.Context) *Route {
 
-	// for p, _ := range g.routes {
-	// 	log.Println(p)
-	// }
 	if r, ok := g.routes[ctx.URL()]; ok {
 		if r.match(ctx) {
 			return r
@@ -187,7 +176,6 @@ func (g *Group) match(ctx *context.Context) *Route {
 
 		for p, r := range g.routes {
 			if strings.Contains(p, "(?P") {
-				// log.Println("REGREX")
 				if r.match(ctx) {
 					return r
 				}
