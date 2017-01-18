@@ -8,6 +8,7 @@ package falcon
 import (
 	"fmt"
 	"github.com/raythorn/falcon/log"
+	"github.com/raythorn/falcon/oss"
 	"github.com/raythorn/falcon/router"
 	"net/http"
 	"time"
@@ -79,6 +80,10 @@ func Use(handler router.Midware) {
 	falcon.Use(handler)
 }
 
+func Oss(pattern string, oss *oss.Oss) {
+	falcon.Oss(pattern, oss)
+}
+
 //Get add a GET handler, which used to get data from server
 func Get(pattern string, handler router.Handler) {
 	falcon.Get(pattern, handler)
@@ -139,6 +144,10 @@ func Group(prefix string, routes ...interface{}) *router.Group {
 //GSub add a sub-group
 func GSub(prefix string, routes ...interface{}) *router.Group {
 	return falcon.g.Sub(prefix, routes...)
+}
+
+func GOss(pattern string, oss *oss.Oss) *router.Route {
+	return falcon.g.Oss(pattern, oss)
 }
 
 //GGet add a grouped GET handler

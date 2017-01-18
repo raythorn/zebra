@@ -3,7 +3,7 @@ package router
 import (
 	"fmt"
 	"github.com/raythorn/falcon/context"
-	// "github.com/raythorn/falcon/log"
+	"github.com/raythorn/falcon/oss"
 	"regexp"
 	"strings"
 )
@@ -13,10 +13,11 @@ type Route struct {
 	regexp  *regexp.Regexp
 	actions map[string]Handler
 	group   *Group
+	oss     *oss.Oss
 }
 
 func newRoute() *Route {
-	return &Route{"", nil, make(map[string]Handler), nil}
+	return &Route{"", nil, make(map[string]Handler), nil, nil}
 }
 
 func (r *Route) match(ctx *context.Context) bool {

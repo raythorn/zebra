@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/raythorn/falcon/context"
+	"github.com/raythorn/falcon/oss"
 	"strings"
 )
 
@@ -48,6 +49,14 @@ func (g *Group) After(midwares ...Midware) *Group {
 func (g *Group) Sub(prefix string, args ...interface{}) *Group {
 	group := newGroup()
 	return group.group(prefix, args...)
+}
+
+func (g *Group) Oss(pattern string, _oss *oss.Oss) *Route {
+
+	route := g.add("GET", pattern, oss.Download)
+	route.oss = _oss
+
+	route.actions["POST"] = oss.Upload
 }
 
 func (g *Group) Get(pattern string, handler Handler) *Route {
@@ -97,6 +106,12 @@ func (g *Group) group(pattern string, args ...interface{}) *Group {
 				for m, h := range route.actions {
 					r.actions[m] = h
 				}
+
+				if route.oss != nil {
+					r.oss = route.oss
+				}
+
+				route = nil
 			} else {
 				g.routes[route.pattern] = route
 			}
@@ -159,11 +174,17 @@ func (g *Group) insert(method, pattern string, handler Handler) *Route {
 		for m, h := range route.actions {
 			rt.actions[m] = h
 		}
+
+		if route.oss != nil {
+			rt.oss = route.oss
+		}
+
+		route = nil
+		return rt
 	} else {
 		g.routes[route.pattern] = route
+		return route
 	}
-
-	return route
 }
 
 func (g *Group) match(ctx *context.Context) *Route {
