@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/raythorn/falcon/context"
 	"github.com/raythorn/falcon/log"
+	"github.com/raythorn/falcon/oss"
 	"net/http"
 )
 
@@ -17,6 +18,11 @@ type Router interface {
 	// all following midwares and handlers will not be executed
 	Use(Midware)
 
+	// Oss add a object storage sevice, which can download and upload objects(file/image...)
+	Oss(string, oss *oss.Oss)
+
+	// Group add a groupped router, all router has a same prefix, and should use GGet/GPut/GPatch...
+	// for add groupped router, and GSub can add a sub-group for current group
 	Group(string, ...interface{}) *Group
 
 	// Get adds a route for a HTTP GET request to the specified matching pattern.
@@ -87,6 +93,10 @@ func (r *router) Group(prefix string, args ...interface{}) *Group {
 	return r.group.group(path, args...)
 }
 
+func (r *router) Oss(prefix string, oss *oss.Oss) {
+
+}
+
 func (r *router) Get(pattern string, handler Handler) {
 
 	r.route.insert("GET", pattern, handler)
@@ -150,6 +160,19 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 	//Search Group
 	route := r.group.match(ctx)
 	if route != nil {
+		var handler Handler = nil
+		var ok bool = false
+		// Check route exist or not, if not eixst return with notfound handler
+		if handler, ok = route.actions[ctx.Method()]; !ok {
+			if r.notfound != nil {
+				r.notfound(ctx)
+			} else {
+				http.NotFound(rw, req)
+			}
+
+			return
+		}
+
 		if route.group != nil && len(route.group.before) > 0 {
 			for _, midware := range route.group.before {
 				if !midware(ctx) {
@@ -158,13 +181,7 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		if h, ok := route.actions[ctx.Method()]; ok {
-			h(ctx)
-		} else {
-			if h, ok := route.actions[ctx.Method()]; ok {
-				h(ctx)
-			}
-		}
+		handler(ctx)
 
 		if route.group != nil && len(route.group.after) > 0 {
 			for _, midware := range route.group.after {
@@ -177,6 +194,7 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Search route
 	route = r.route.match(ctx)
 	if route != nil {
 		if h, ok := route.actions[ctx.Method()]; ok {
@@ -190,6 +208,7 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//Not found
 	if r.notfound != nil {
 		r.notfound(ctx)
 	} else {
