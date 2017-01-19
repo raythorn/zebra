@@ -57,6 +57,8 @@ func (g *Group) Oss(pattern string, _oss *oss.Oss) *Route {
 	route.oss = _oss
 
 	route.actions["POST"] = oss.Upload
+
+	return route
 }
 
 func (g *Group) Get(pattern string, handler Handler) *Route {

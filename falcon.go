@@ -6,12 +6,8 @@
 package falcon
 
 import (
-	"fmt"
-	"github.com/raythorn/falcon/log"
 	"github.com/raythorn/falcon/oss"
 	"github.com/raythorn/falcon/router"
-	"net/http"
-	"time"
 )
 
 var (
@@ -22,52 +18,6 @@ var (
 func init() {
 	falcon = &app{router.New(), &router.Group{}}
 	Env = &Environment{data: make(map[string]string)}
-}
-
-type app struct {
-	router.Router
-	g *router.Group
-}
-
-func (f *app) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	f.Handle(rw, req)
-}
-
-func (f *app) run() {
-
-	finish := make(chan bool, 1)
-
-	go func() {
-		host := Env.Host()
-		port := Env.Port()
-		addr := fmt.Sprintf("%s:%d", host, port)
-
-		log.Info("Server listen at %s", addr)
-
-		if err := http.ListenAndServe(addr, f); err != nil {
-			log.Error("ListenAndServe fail")
-			time.Sleep(100 * time.Microsecond)
-			finish <- true
-		}
-	}()
-
-	if Env.TLS() {
-		go func() {
-			cert := Env.TLSCert()
-			key := Env.TLSKey()
-			host := Env.TLSHost()
-			port := Env.TLSPort()
-
-			addr := fmt.Sprintf("%s:%d", host, port)
-			if err := http.ListenAndServeTLS(addr, cert, key, f); err != nil {
-				log.Error("ListenAndServeTLS fail")
-				time.Sleep(100 * time.Microsecond)
-				finish <- true
-			}
-		}()
-	}
-
-	<-finish
 }
 
 //Run starts a http(s) server

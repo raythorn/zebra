@@ -2,22 +2,24 @@ package oss
 
 import (
 	"github.com/raythorn/falcon/context"
+	"net/http"
 	"os"
 	"path"
 )
 
 func Download(ctx *context.Context) {
-	// root := ctx.Get(OssRootKey)
-	// fp := ctx.Get(OssPathKey)
 
-	// if root == "" {
-	// 	root, _ = os.Getwd()
-	// }
+	filepath := path.Clean(ctx.Get(OssRootKey) + "/" + ctx.Get(OssPathKey))
 
-	// fp = path.Clean(root + "/" + fp)
+	_, err := os.Stat(fp)
+	if os.IsNotExist(err) {
+		ctx.NotFound()
+		return
+	}
 
-	// fi, err := os.Stat(fp)
-	// if err != nil || !os.IsExist(err) {
-
-	// }
+	if err != nil {
+		ctx.WriteHeader(500)
+		ctx.WriteString(err.Error())
+		return
+	}
 }

@@ -337,3 +337,7 @@ func (c *Context) XML(data interface{}, indent bool) error {
 
 	return nil
 }
+
+func (c *Context) NotFound() {
+	http.NotFound(c.rw, c.request)
+}

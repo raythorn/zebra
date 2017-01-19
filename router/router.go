@@ -188,7 +188,9 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 
 		if route.oss != nil {
 			ctx.Set(oss.OssRootKey, route.oss.Root())
-			ctx.Set(oss.OssPathKey, route.oss.Archive().Path(ctx))
+			if route.oss.Archive() != nil {
+				ctx.Set(oss.OssPathKey, route.oss.Archive().Path(ctx))
+			}
 		}
 
 		handler(ctx)

@@ -9,4 +9,5 @@ type WebArchive struct {
 
 func (web *WebArchive) Path(ctx *context.Context) string {
 
+	return ""
 }
