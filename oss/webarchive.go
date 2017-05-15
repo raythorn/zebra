@@ -7,7 +7,7 @@ import (
 type WebArchive struct {
 }
 
-func (web *WebArchive) Path(ctx *context.Context) string {
+func (web *WebArchive) Path(oss *Oss, ctx *context.Context) string {
 
 	return ""
 }

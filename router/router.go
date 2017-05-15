@@ -23,7 +23,7 @@ type Router interface {
 	Group(string, ...interface{}) *Group
 
 	// Oss add a object storage sevice, which can download and upload objects(file/image...)
-	Oss(string, *oss.Oss)
+	Oss(string, string, oss.Archive)
 
 	// Get adds a route for a HTTP GET request to the specified matching pattern.
 	Get(string, Handler)
@@ -93,12 +93,11 @@ func (r *router) Group(prefix string, args ...interface{}) *Group {
 	return r.group.group(path, args...)
 }
 
-func (r *router) Oss(pattern string, _oss *oss.Oss) {
+func (r *router) Oss(pattern, root string, archive oss.Archive) {
 
-	route := r.route.insert("GET", pattern, oss.Download)
-	route.oss = _oss
-
-	route.actions["POST"] = oss.Upload
+	route := r.route.insert("GET", pattern, oss.ServeContent)
+	route.actions["POST"] = oss.ServeContent
+	route.oss = oss.New(pattern, root, archive)
 }
 
 func (r *router) Get(pattern string, handler Handler) {
@@ -186,13 +185,6 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		if route.oss != nil {
-			ctx.Set(oss.OssRootKey, route.oss.Root())
-			if route.oss.Archive() != nil {
-				ctx.Set(oss.OssPathKey, route.oss.Archive().Path(ctx))
-			}
-		}
-
 		handler(ctx)
 
 		if route.group != nil && len(route.group.after) > 0 {
@@ -212,8 +204,7 @@ func (r *router) Handle(rw http.ResponseWriter, req *http.Request) {
 
 		if h, ok := route.actions[ctx.Method()]; ok {
 			if route.oss != nil {
-				ctx.Set(oss.OssRootKey, route.oss.Root())
-				ctx.Set(oss.OssPathKey, route.oss.Archive().Path(ctx))
+				ctx.Set(oss.OssPathKey, route.oss.Archive().Path(route.oss, ctx))
 			}
 
 			h(ctx)

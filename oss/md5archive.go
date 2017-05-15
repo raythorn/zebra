@@ -7,6 +7,6 @@ import (
 type MD5Archive struct {
 }
 
-func (md5 *MD5Archive) Path(ctx *context.Context) string {
+func (md5 *MD5Archive) Path(oss *Oss, ctx *context.Context) string {
 	return ""
 }

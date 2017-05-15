@@ -11,24 +11,23 @@ import (
 
 //Keys of oss elements, this will save in context which can be referred by upload/download handler
 const (
-	//root path of current oss object
-	OssRootKey = "com.raythorn.falcon.oss.root"
 	//relative path of current file
 	OssPathKey = "com.raythorn.falcon.oss.path"
 )
 
 // OSS archive manager, which can arrange objects path with your own algrithem
 type Archive interface {
-	Path(ctx *context.Context) string
+	Path(oss *Oss, ctx *context.Context) string
 }
 
 // Object storage service, handle object upload and download request
 type Oss struct {
-	archive Archive
+	pattern string
 	root    string
+	archive Archive
 }
 
-func New(root string, archive Archive) *Oss {
+func New(pattern, root string, archive Archive) *Oss {
 
 	if root == "" || !path.IsAbs(root) {
 		root = path.Clean(applicationPath() + root)
@@ -51,7 +50,7 @@ func New(root string, archive Archive) *Oss {
 		log.Fatal("Root is not a directory or does not have read/write permission")
 	}
 
-	oss := &Oss{root: root, archive: archive}
+	oss := &Oss{pattern: pattern, root: root, archive: archive}
 	return oss
 }
 

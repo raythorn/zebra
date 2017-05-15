@@ -30,8 +30,8 @@ func Use(handler router.Midware) {
 	falcon.Use(handler)
 }
 
-func Oss(pattern string, oss *oss.Oss) {
-	falcon.Oss(pattern, oss)
+func Oss(pattern, root string, archive oss.Archive) {
+	falcon.Oss(pattern, root, archive)
 }
 
 //Get add a GET handler, which used to get data from server
@@ -94,10 +94,6 @@ func Group(prefix string, routes ...interface{}) *router.Group {
 //GSub add a sub-group
 func GSub(prefix string, routes ...interface{}) *router.Group {
 	return falcon.g.Sub(prefix, routes...)
-}
-
-func GOss(pattern string, oss *oss.Oss) *router.Route {
-	return falcon.g.Oss(pattern, oss)
 }
 
 //GGet add a grouped GET handler
