@@ -3,26 +3,37 @@ package oss
 import (
 	"github.com/raythorn/falcon/context"
 	// "net/http"
-	// "os"
+	"os"
 	// "path"
-	"github.com/raythorn/falcon/log"
+	// "github.com/raythorn/falcon/log"
 )
 
 func ServeContent(ctx *context.Context) {
 
-	log.Info("Serve Content")
-	log.Info("Resource Name: %s", ctx.Get("resource"))
-	// filepath := path.Clean(ctx.Get(OssRootKey) + "/" + ctx.Get(OssPathKey))
+	respath := ctx.Get(OssPathKey)
+	if len(respath) == 0 {
+		resp := map[string]interface{}{}
+		resp["code"] = 1
+		resp["msg"] = "Invalid resid, not MD5 string"
+		ctx.JSON(resp, false)
+		return
+	}
 
-	// _, err := os.Stat(fp)
-	// if os.IsNotExist(err) {
-	// 	ctx.NotFound()
-	// 	return
-	// }
+	if ctx.Method() == "GET" {
+		if !isExist(respath) {
+			ctx.NotFound()
+			return
+		}
+	} else if ctx.Method() == "POST" {
 
-	// if err != nil {
-	// 	ctx.WriteHeader(500)
-	// 	ctx.WriteString(err.Error())
-	// 	return
-	// }
+	}
+}
+
+func isExist(file string) bool {
+	_, err := os.Stat(file)
+	if err == nil {
+		return true
+	}
+
+	return false
 }
