@@ -42,6 +42,14 @@ func New() *Context {
 	return &Context{data: make(map[string]string), form: make(map[string]string), body: []byte{}}
 }
 
+func (c *Context) ResponseWriter() http.ResponseWriter {
+	return c.rw
+}
+
+func (c *Context) Request() *http.Request {
+	return c.request
+}
+
 // Initialise Context with HTTP Request and ResponseWriter, it will parse the Request header,
 // and it also parse the get/post/put form parameters. NOTE: The Path Regexp param MUST NOT have
 // same name with HTTP Request form param, otherwise, it will override the HTTP form param

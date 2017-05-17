@@ -96,8 +96,9 @@ func (r *router) Group(prefix string, args ...interface{}) *Group {
 func (r *router) Oss(pattern, root string, archive oss.Archive) {
 
 	route := r.route.insert("GET", pattern, oss.ServeContent)
-	route.actions["POST"] = oss.ServeContent
-	route.oss = oss.New(pattern, root, archive)
+	route.actions["HEAD"] = oss.ServeContent
+	route.actions["POST"] = oss.DepositContent
+	route.oss = oss.New(root, archive)
 }
 
 func (r *router) Get(pattern string, handler Handler) {

@@ -22,16 +22,19 @@ type Archive interface {
 
 // Object storage service, handle object upload and download request
 type Oss struct {
-	pattern string
 	root    string
 	archive Archive
 }
 
-func New(pattern, root string, archive Archive) *Oss {
+func New(root string, archive Archive) *Oss {
+
+	log.Debug(applicationPath())
 
 	if root == "" || !path.IsAbs(root) {
-		root = path.Clean(applicationPath() + root)
+		root = path.Clean(applicationPath() + "/" + root)
 	}
+
+	log.Debug(root)
 
 	_, err := os.Stat(root)
 	if os.IsNotExist(err) {
@@ -50,7 +53,7 @@ func New(pattern, root string, archive Archive) *Oss {
 		log.Fatal("Root is not a directory or does not have read/write permission")
 	}
 
-	oss := &Oss{pattern: pattern, root: root, archive: archive}
+	oss := &Oss{root: root, archive: archive}
 	return oss
 }
 
@@ -69,7 +72,7 @@ func applicationPath() string {
 		log.Fatal("Cannot find application path!")
 	}
 
-	fp, err := filepath.Abs(file)
+	fp, err := filepath.Abs(filepath.Dir(file))
 	if err != nil {
 		log.Fatal("Cannot find application path!")
 	}
