@@ -5,8 +5,9 @@ import (
 	"github.com/raythorn/falcon/log"
 	"net/http"
 	"os"
-	"strings"
-	"time"
+	"regexp"
+	"strconv"
+	// "strings"
 )
 
 func ServeContent(ctx *context.Context) {
@@ -48,12 +49,9 @@ func DepositContent(ctx *context.Context) {
 		return
 	}
 
-	// http.Error(ctx.ResponseWriter(), "error", 500)
-	expect := ctx.Get("Expect")
-	if strings.Contains(expect, "100-continue") {
-		log.Debug("100-continue")
-		ctx.WriteHeader(100)
-		time.Sleep(20 * time.Second)
+	from, to := contentRange(ctx)
+	if from == 0 && to == 0 {
+		ctx.WriteHeader(416)
 	}
 
 	ctx.WriteHeader(200)
@@ -66,4 +64,54 @@ func isExist(file string) bool {
 	}
 
 	return false
+}
+
+func contentLength(ctx *context.Context) int64 {
+	lengthstr := ctx.Get("Content-Length")
+	if len(lengthstr) == 0 {
+		return 0
+	}
+
+	length, err := strconv.ParseInt(lengthstr, 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return length
+}
+
+func contentRange(ctx *context.Context) (int64, int64) {
+	length := contentLength(ctx)
+	rangestr := ctx.Get("Content-Range")
+	if len(rangestr) == 0 {
+		return 0, length
+	}
+
+	pattern := `(?P<from>\d*)-(?P<to>\d*)/(?P<total>\d*)`
+	reg := regexp.MustCompile(pattern)
+	matches := reg.FindStringSubmatch(rangestr)
+
+	var total int64 = 0
+	var err error = nil
+
+	for i, name := range reg.SubexpNames() {
+		err = nil
+		if name == "from" {
+			from, err = strconv.ParseInt(matches[i], 10, 64)
+		} else if name == "to" {
+			to, err = strconv.ParseInt(matches[i], 10, 64)
+		} else if name == "total" {
+			total, err = strconv.ParseInt(matches[i], 10, 64)
+		}
+
+		if err != nil {
+			return 0, 0
+		}
+	}
+
+	if total != (to-from+1) || to >= length {
+		return 0, 0
+	}
+
+	return from, to
 }
