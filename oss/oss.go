@@ -9,6 +9,18 @@ import (
 	"path/filepath"
 )
 
+const (
+	HTTP_CONTINUE     = 100
+	HTTP_SUCCESS      = 200
+	HTTP_PARTIAL      = 206
+	HTTP_REQUEST      = 400
+	HTTP_UNAUTHORIZED = 401
+	HTTP_FORBIDDEN    = 403
+	HTTP_NOTFOUND     = 404
+	HTTP_RANGE        = 416
+	HTTP_INTERNAL     = 500
+)
+
 //Keys of oss elements, this will save in context which can be referred by upload/download handler
 const (
 	//relative path of current file
