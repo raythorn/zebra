@@ -57,7 +57,17 @@ func DepositContent(ctx *context.Context) {
 	//Already exist
 	if isExist(respath) {
 		ctx.WriteHeader(HTTP_SUCCESS)
+		log.Debug("Already exist")
 		return
+	}
+
+	resdir := path.Dir(respath)
+	if !isExist(resdir) {
+		err := os.MkdirAll(resdir, 0770)
+		if err != nil {
+			ctx.WriteHeader(HTTP_INTERNAL)
+			return
+		}
 	}
 
 	ext := path.Ext(respath)
@@ -102,6 +112,7 @@ func DepositContent(ctx *context.Context) {
 	data := ctx.Body()
 	var datalen int64 = int64(len(data))
 
+	log.Debug("Chunk: %d, Size: %d", chunk, datalen)
 	if chunk != datalen {
 		ctx.WriteHeader(HTTP_REQUEST)
 		return
@@ -118,6 +129,7 @@ func DepositContent(ctx *context.Context) {
 		filename := strings.TrimSuffix(path.Base(respath), ext)
 		if md5str == filename {
 			cache.Close()
+			closed = true
 			err := os.Rename(cachefile, respath)
 			if err != nil {
 				ctx.WriteHeader(HTTP_INTERNAL)
