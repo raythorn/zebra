@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -115,25 +116,37 @@ func (t *Token) Verify(token string) error {
 		return errors.New("Unmarshal claims failed")
 	}
 
+	fmt.Println(t)
+
 	if value, ok := t.claims["nbf"]; ok {
-		if nbf, ok := value.(time.Time); ok {
-			if nbf.After(time.Now()) {
-				return errors.New("Token not active")
-			}
+		if timestr, ok := value.(string); !ok {
+			return errors.New("Bad nbf value")
 		} else {
-			return errors.New("Bad nbf Value")
+			if nbf, err := time.ParseInLocation("2006-01-02T15:04:05.999999999+08:00", timestr, time.Local); err != nil {
+				return err
+			} else {
+				if nbf.After(time.Now()) {
+					return errors.New("Token not active")
+				}
+			}
 		}
 	} else {
 		return errors.New("Nbf not exist")
 	}
 
 	if value, ok := t.claims["exp"]; ok {
-		if exp, ok := value.(time.Time); ok {
-			if exp.Before(time.Now()) {
-				return errors.New("Token expired")
-			}
-		} else {
+		if timestr, ok := value.(string); !ok {
 			return errors.New("Bad exp value")
+		} else {
+			if exp, err := time.ParseInLocation("2006-01-02T15:04:05.999999999+08:00", timestr, time.Local); err != nil {
+				return err
+			} else {
+				fmt.Println(exp)
+				fmt.Println(time.Now())
+				if exp.Before(time.Now()) {
+					return errors.New("Token expired")
+				}
+			}
 		}
 	} else {
 		return errors.New("Exp not exist")
