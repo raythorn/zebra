@@ -1,20 +1,20 @@
-## Falcon
+## Zebra
 
-falcon is a simple but convenient framework for quickly developing RESTful APIs web applications/services in Go.
+zebra is a simple but convenient framework for quickly developing RESTful APIs web applications/services in Go.
 
 ## Quick Start
 #### Download and install
 
-	go get github.com/raythorn/falcon
+	go get github.com/raythorn/zebra
 
 ###### Create file `test.go`
 ```go
 package main
 
-import "github.com/raythorn/falcon"
+import "github.com/raythorn/zebra"
 
 func main() {
-	falcon.Run()
+	zebra.Run()
 }
 
 ```
@@ -24,7 +24,7 @@ go build test.go
 ./test
 ```
 ######Congratulations! 
-You just built your first falcon app.
+You just built your first zebra app.
 
 ## Features
 * [RESTful API](#restful-api)
@@ -42,43 +42,43 @@ You just built your first falcon app.
 * [Log](#log)
 
 ## RESTful API
-falcon provides RESTful APIs, you can easily writing RESTful hanlder with Get/Put/Post/Delete/Patch/Options/Head/Any.
+zebra provides RESTful APIs, you can easily writing RESTful hanlder with Get/Put/Post/Delete/Patch/Options/Head/Any.
 Take Get for example:
 ```go
 import (
-	"github.com/raythorn/falcon"
-	"github.com/raythorn/falcon/context"
+	"github.com/raythorn/zebra"
+	"github.com/raythorn/zebra/context"
 )
 
 func user_get(ctx *context.Context) {
-	ctx.WriteString("Falcon")	
+	ctx.WriteString("zebra")	
 }
 
-falcon.Get("/user", user_get)
+zebra.Get("/user", user_get)
 ```
 ### Context
-falcon provides a context which contains http.RespondWriter and http.Request for http, and a simple cache to store temporary
+zebra provides a context which contains http.RespondWriter and http.Request for http, and a simple cache to store temporary
 data, such as http request header, request parametr along with the url and form, named regexps and, of course, custom variables.
 And it has several convenient APIs to handle http related jobs.
 ### Routers
-falcon supports fixed route and regular expression route.
+zebra supports fixed route and regular expression route.
 
 ```go
-falcon.Get("/user", handler) //fixed route
+zebra.Get("/user", handler) //fixed route
 
-falcon.Get("/user/:id", handler) //regexp route, match /user/123 ..., and id will be set in context
+zebra.Get("/user/:id", handler) //regexp route, match /user/123 ..., and id will be set in context
 
-falcon.Get("/user/(?P<name>exp)", handler) //named regexp route, name will be set in context
+zebra.Get("/user/(?P<name>exp)", handler) //named regexp route, name will be set in context
 ```
 ### Groups
-falcon supports group api with same function.
+zebra supports group api with same function.
 ```go
-falcon.Group("/user"
-	falcon.GGet("", handler),	//Match "/user"
-	falcon.GPut("", handler),
-	falcon.GSub("/friends",
-		falcon.GGet("", handler), //Match "/user/friends"
-		falcon.GPut("", handler),
+zebra.Group("/user"
+	zebra.GGet("", handler),	//Match "/user"
+	zebra.GPut("", handler),
+	zebra.GSub("/friends",
+		zebra.GGet("", handler), //Match "/user/friends"
+		zebra.GPut("", handler),
 	),
 )
 ```
@@ -96,8 +96,8 @@ GGet/GGPut/... is same as Get/Put... APIs, which add related route to group, and
 ### MongoDB
 
 ## Log
-Logger for falcon, it can print log to both console and file. It default logs to console, and you can user log.Add("file", "/tmp/log") to add log to file. Log file will be named with current date, and rotate to new file in 12:00pm, also cleanup older log files, system cached the latest files in a month.
+Logger for zebra, it can print log to both console and file. It default logs to console, and you can user log.Add("file", "/tmp/log") to add log to file. Log file will be named with current date, and rotate to new file in 12:00pm, also cleanup older log files, system cached the latest files in a month.
 
 ## LICENSE
 
-falcon source code is licensed under the [Apache Licence](http://www.apache.org/licenses/LICENSE-2.0.html), Version 2.0.
+zebra source code is licensed under the [Apache Licence](http://www.apache.org/licenses/LICENSE-2.0.html), Version 2.0.

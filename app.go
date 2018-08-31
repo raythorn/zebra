@@ -1,9 +1,9 @@
-package falcon
+package zebra
 
 import (
 	"fmt"
-	"github.com/raythorn/falcon/log"
-	"github.com/raythorn/falcon/router"
+	"github.com/raythorn/zebra/log"
+	"github.com/raythorn/zebra/router"
 	"net/http"
 	// "os"
 	// "os/exec"

@@ -2,7 +2,7 @@ package db
 
 import (
 	"errors"
-	"github.com/raythorn/falcon/log"
+	"github.com/raythorn/zebra/log"
 	mgo "gopkg.in/mgo.v2"
 	"sync"
 )

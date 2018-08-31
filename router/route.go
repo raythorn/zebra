@@ -2,8 +2,8 @@ package router
 
 import (
 	"fmt"
-	"github.com/raythorn/falcon/context"
-	"github.com/raythorn/falcon/oss"
+	"github.com/raythorn/zebra/context"
+	"github.com/raythorn/zebra/oss"
 	"regexp"
 	"strings"
 )

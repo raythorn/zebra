@@ -1,4 +1,4 @@
-package falcon
+package zebra
 
 import (
 	"fmt"
@@ -6,15 +6,15 @@ import (
 	"sync"
 )
 
-//Simple implement for falcon evironment, you can use this to save your configs.
+//Simple implement for zebra evironment, you can use this to save your configs.
 //It's thread-safe, so you can have all your fun in erverywhere.
 type Environment struct {
 	sync.RWMutex
 	data map[string]string
 }
 
-// Set env variable with a pair of key-value, you cann't use key with prefix "Falcon:", which
-// is reserved for falcon system
+// Set env variable with a pair of key-value, you cann't use key with prefix "Zebra:", which
+// is reserved for zebra system
 func (e *Environment) Set(key, value string) {
 	e.Lock()
 	defer e.Unlock()
@@ -45,23 +45,23 @@ func (e *Environment) Del(key string) {
 //valid cert file, key file and HTTPS port
 func (e *Environment) EnableTLS(cert, key, host string, port int) {
 
-	e.Set("Falcon:TLS", "true")
-	e.Set("Falcon:TLSCERT", cert)
-	e.Set("Falcon:TLSKEY", key)
-	e.Set("Falcon:TLSHOST", host)
+	e.Set("Zebra:TLS", "true")
+	e.Set("Zebra:TLSCERT", cert)
+	e.Set("Zebra:TLSKEY", key)
+	e.Set("Zebra:TLSHOST", host)
 	p := fmt.Sprintf("%d", port)
-	e.Set("Falcon:TLSPORT", p)
+	e.Set("Zebra:TLSPORT", p)
 }
 
 //Disable HTTPS
 func (e *Environment) DisableTLS() {
-	e.Set("Falcon:TLS", "false")
+	e.Set("Zebra:TLS", "false")
 }
 
 //Check if HTTPS is enabled
 func (e *Environment) TLS() bool {
 
-	tls := e.Get("Falcon:TLS")
+	tls := e.Get("Zebra:TLS")
 	if tls == "true" {
 		return true
 	}
@@ -71,22 +71,22 @@ func (e *Environment) TLS() bool {
 
 //Get https cert file
 func (e *Environment) TLSCert() string {
-	return e.Get("Falcon:TLSCERT")
+	return e.Get("Zebra:TLSCERT")
 }
 
 //Get https key file
 func (e *Environment) TLSKey() string {
-	return e.Get("Falcon:TLSKEY")
+	return e.Get("Zebra:TLSKEY")
 }
 
 //Get https host
 func (e *Environment) TLSHost() string {
-	return e.Get("Falcon:TLSHOST")
+	return e.Get("Zebra:TLSHOST")
 }
 
 //Get https port, if port not set or error happened, default port 443 will be returned
 func (e *Environment) TLSPort() int {
-	port := e.Get("Falcon:TLSPORT")
+	port := e.Get("Zebra:TLSPORT")
 	if port != "" {
 		if p, err := strconv.Atoi(port); err == nil {
 			return p
@@ -101,18 +101,18 @@ func (e *Environment) Http(host string, port int) {
 
 	p := fmt.Sprintf("%d", port)
 
-	e.Set("Falcon:HOST", host)
-	e.Set("Falcon:PORT", p)
+	e.Set("Zebra:HOST", host)
+	e.Set("Zebra:PORT", p)
 }
 
 //Get host, works for both http and https
 func (e *Environment) Host() string {
-	return e.Get("Falcon:HOST")
+	return e.Get("Zebra:HOST")
 }
 
 //Get http listen port
 func (e *Environment) Port() int {
-	port := e.Get("Falcon:PORT")
+	port := e.Get("Zebra:PORT")
 	if port != "" {
 		if p, err := strconv.Atoi(port); err == nil {
 			return p

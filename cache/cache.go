@@ -1,4 +1,4 @@
-//Package cache is a simple cache machnism for falcon, it support redis for now,
+//Package cache is a simple cache machnism for zebra, it support redis for now,
 //and you can add your own cache engine with implement Factory and Cache.
 package cache
 
@@ -14,7 +14,7 @@ var (
 	cacheInstance *cache
 )
 
-//Cache is a interface which is used to interact with cache, you MUST implement this to use falcon's cache mechanism
+//Cache is a interface which is used to interact with cache, you MUST implement this to use zebra's cache mechanism
 type Cache interface {
 	//Set data to cache
 	Set(key string, args ...interface{}) error
@@ -47,7 +47,7 @@ type Cache interface {
 	Factory() Factory
 }
 
-//Factory is a interface which is used init and cleanup cache context, you MUST implement this to use falcon's cache mechanism
+//Factory is a interface which is used init and cleanup cache context, you MUST implement this to use zebra's cache mechanism
 type Factory interface {
 	//Make initialise a Cache instance
 	Make(uri string) Cache

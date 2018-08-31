@@ -1,7 +1,7 @@
 package oss
 
 import (
-	"github.com/raythorn/falcon/context"
+	"github.com/raythorn/zebra/context"
 )
 
 type WebArchive struct {

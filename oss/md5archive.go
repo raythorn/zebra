@@ -1,8 +1,8 @@
 package oss
 
 import (
-	"github.com/raythorn/falcon/context"
-	"github.com/raythorn/falcon/log"
+	"github.com/raythorn/zebra/context"
+	"github.com/raythorn/zebra/log"
 	"path"
 	"strings"
 )

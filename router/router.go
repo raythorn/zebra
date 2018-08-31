@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/raythorn/falcon/context"
-	"github.com/raythorn/falcon/log"
-	"github.com/raythorn/falcon/oss"
+	"github.com/raythorn/zebra/context"
+	"github.com/raythorn/zebra/log"
+	"github.com/raythorn/zebra/oss"
 	"net/http"
 )
 

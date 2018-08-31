@@ -3,11 +3,11 @@ package cache
 import (
 	"errors"
 	redigo "github.com/garyburd/redigo/redis"
-	"github.com/raythorn/falcon/log"
+	"github.com/raythorn/zebra/log"
 	"time"
 )
 
-//Redis engine for falcon Cache
+//Redis engine for zebra Cache
 //
 //Implement interface Factory and Cache, interface Factory used for init and destroy engine,
 //and interface Cache used for manipulating the cache, all function but Ioctrl only support

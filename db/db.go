@@ -1,7 +1,7 @@
 //Package db is a database mechanism, which helps accessing data more convenient and efficient.
 //
 //This mechanism provide two interfaces, Database and Factory, and you MUST implement these two
-//interfaces to add your own database engine. Currently, falcon support ONLY MongoDB with driver
+//interfaces to add your own database engine. Currently, zebra support ONLY MongoDB with driver
 //mgo(http://labix.org/mgo).
 package db
 
@@ -17,7 +17,7 @@ func init() {
 	dbInstance = &database{nil}
 }
 
-//Database is interface which MUST be implemented to use falcon database mechanism
+//Database is interface which MUST be implemented to use zebra database mechanism
 //
 //This interface provide several base operations for database access, such as, Insert, Delete, Update, Query
 //, etc, with which you can access the data with unified APIs, and it's very convenient and efficient.
@@ -50,7 +50,7 @@ type Database interface {
 	Factory() Factory
 }
 
-//Factory is a interface MUST be implemented to use falcon database mechanism
+//Factory is a interface MUST be implemented to use zebra database mechanism
 //
 //This interface provide two APIs to create and destroy database engine instance
 type Factory interface {

@@ -2,7 +2,7 @@ package log
 
 import (
 	"fmt"
-	"github.com/raythorn/falcon/log"
+	"github.com/raythorn/zebra/log"
 	"testing"
 )
 
